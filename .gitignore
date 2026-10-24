@@ -1,0 +1,42 @@
+# Dependencies / builds
+node_modules/
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+
+# Environment / secrets — NEVER commit real secrets
+.env
+.env.*
+!.env.example
+!.env.example.*
+!.env*.example
+
+# Prisma
+prisma/*.db
+src/generated/prisma/
+
+# Testing
+coverage/
+playwright-report/
+test-results/
+blob-report/
+.vitest/
+
+# AWS / CDK
+infrastructure/cdk.out/
+cdk.context.json
+.amplify/
+
+# Logs / caches / OS
+*.log
+npm-debug.log*
+.eslintcache
+.cache/
+.tmp/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

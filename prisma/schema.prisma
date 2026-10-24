@@ -1,0 +1,247 @@
+// SmartHomeAI — Prisma schema (normative design artifact)
+// Docs: docs/architecture/DATABASE_SCHEMA.md (must stay in sync with this file)
+//
+// Notes:
+// - ownerId is the identity provider's opaque `sub` (Supabase Auth in cloud, local
+//   dev ids in AUTH_MODE=dev). Ownership scoping is enforced in the service
+//   layer on every query (FR-012).
+// - ItemLocationEvent is append-only: application code must never UPDATE or DELETE
+//   rows of this table outside of account purge / retention jobs (FR-004, BR-06).
+// - Extensions (pg_trgm) and generated tsvector columns are added in the first SQL
+//   migration (000002_search/migration.sql); Prisma cannot express them declaratively.
+// - users.id is the identity provider's opaque `sub` (Supabase Auth in cloud, a
+//   local dev id otherwise),
+//   so it is TEXT — and every FK referencing it must be TEXT as well (Postgres
+//   requires FK column types to match exactly; UUIDs are only used for ids we
+//   generate ourselves). Mirrored in docs/architecture/DATABASE_SCHEMA.md §1.7.
+
+generator client {
+  provider = "prisma-client-js"
+  // Generated client lives in src/ so the import path is explicit and reviewable.
+  output   = "../src/generated/prisma/client"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Direct (non-pooled) URL for migrations; pgbouncer-style pooling for runtime.
+  directUrl = env("DIRECT_URL")
+}
+
+enum ItemSource {
+  USER
+  ASSISTANT
+}
+
+enum EventSource {
+  MANUAL
+  ASSISTANT
+}
+
+enum EventConfidence {
+  CONFIRMED
+  INFERRED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+enum MessageStatus {
+  COMPLETE
+  PENDING_ACTION
+  FALLBACK
+  ERROR
+}
+
+enum ConversationStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum ThemePreference {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+enum AuditActorType {
+  USER
+  SYSTEM
+}
+
+model User {
+  id          String    @id // identity provider `sub` (never auto-generated)
+  email       String    @unique
+  displayName String?   @db.VarChar(120)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime? // soft-delete during account deletion grace period (FR-014)
+
+  items         Item[]
+  aliases       ItemAlias[]
+  locations     Location[]
+  events        ItemLocationEvent[]
+  conversations Conversation[]
+  messages      Message[]
+  preference    UserPreference?
+  auditEvents   AuditEvent[]
+
+  @@map("users")
+}
+
+model Item {
+  id          String      @id @default(uuid()) @db.Uuid
+  ownerId     String      @map("owner_id")
+  name        String      @db.VarChar(120)
+  description String?     @db.Text
+  category    String?     @db.VarChar(60)
+  createdVia  ItemSource  @default(USER) @map("created_via")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  archivedAt  DateTime?   @map("archived_at")
+  deletedAt   DateTime?   @map("deleted_at") // soft delete (FR-016)
+
+  owner  User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  aliases ItemAlias[]
+  events  ItemLocationEvent[]
+
+  // Default inventory scoping: owner + not deleted + not archived first.
+  @@index([ownerId, deletedAt, archivedAt])
+  @@index([ownerId, name])
+  @@map("items")
+}
+
+model ItemAlias {
+  id              String   @id @default(uuid()) @db.Uuid
+  ownerId         String   @map("owner_id")
+  itemId          String   @map("item_id") @db.Uuid
+  alias           String   @db.VarChar(120)
+  normalizedAlias String   @map("normalized_alias") @db.VarChar(120) // lowercased + trimmed
+  createdAt       DateTime @default(now())
+
+  item  Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, normalizedAlias]) // one alias string maps to one item per owner
+  @@index([normalizedAlias])
+  @@map("item_aliases")
+}
+
+model Location {
+  id          String    @id @default(uuid()) @db.Uuid
+  ownerId     String    @map("owner_id")
+  name        String    @db.VarChar(80)
+  description String?   @db.Text
+  parentId    String?   @map("parent_id") @db.Uuid // null = top-level; depth <= 3 (BR-04)
+  archivedAt  DateTime? @map("archived_at")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  owner  User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  parent Location?  @relation("LocationHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children Location[] @relation("LocationHierarchy")
+  events ItemLocationEvent[]
+
+  // Sibling-name uniqueness and depth limits are enforced in the service layer +
+  // partial unique indexes defined in SQL migration V3 (null parent handled separately).
+  @@index([ownerId, archivedAt])
+  @@index([ownerId, parentId, name])
+  @@map("locations")
+}
+
+model ItemLocationEvent {
+  id         String           @id @default(uuid()) @db.Uuid
+  ownerId    String           @map("owner_id")
+  itemId     String           @map("item_id") @db.Uuid
+  locationId String           @map("location_id") @db.Uuid
+  occurredAt DateTime         @map("occurred_at") // when the item was reportedly placed there
+  recordedAt DateTime         @default(now()) @map("recorded_at") // when the system stored it
+  source     EventSource      @default(MANUAL)
+  confidence EventConfidence  @default(CONFIRMED)
+  note       String?          @db.VarChar(300)
+  messageId  String?          @map("message_id") @db.Uuid // originating assistant message, if any
+
+  item     Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  location Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  owner    User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  message  Message? @relation(fields: [messageId], references: [id], onDelete: SetNull)
+
+  // Append-only by application contract; no @@updatedAt by design (FR-004).
+  @@index([itemId, occurredAt(sort: Desc)])
+  @@index([ownerId, recordedAt(sort: Desc)]) // activity feed / dashboard
+  @@map("item_location_events")
+}
+
+model Conversation {
+  id            String             @id @default(uuid()) @db.Uuid
+  ownerId       String             @map("owner_id")
+  title         String?            @db.VarChar(120)
+  status        ConversationStatus @default(ACTIVE)
+  lastMessageAt DateTime?          @map("last_message_at")
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  owner    User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@index([ownerId, lastMessageAt(sort: Desc)])
+  @@map("conversations")
+}
+
+model Message {
+  id               String        @id @default(uuid()) @db.Uuid
+  conversationId  String        @map("conversation_id") @db.Uuid
+  ownerId         String        @map("owner_id")
+  role            MessageRole
+  content         String        @db.Text
+  intent          String?       @db.VarChar(40) // classified intent (metadata only)
+  pendingAction   Json?         @map("pending_action") // structured write proposal (FR-024)
+  status          MessageStatus @default(COMPLETE)
+  model           String?       @db.VarChar(80) // provider model id (metadata only)
+  latencyMs       Int?          @map("latency_ms")
+  promptTokens    Int?          @map("prompt_tokens")
+  completionTokens Int?         @map("completion_tokens")
+  createdAt       DateTime      @default(now())
+
+  conversation Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  owner        User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  events       ItemLocationEvent[]
+
+  @@index([conversationId, createdAt])
+  @@index([ownerId, createdAt(sort: Desc)])
+  @@map("messages")
+}
+
+model UserPreference {
+  userId                 String           @id @map("user_id")
+  theme                  ThemePreference  @default(LIGHT)
+  locale                 String?          @db.VarChar(10)
+  showSuggestedQuestions Boolean          @default(true) @map("show_suggested_questions")
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model AuditEvent {
+  id         String         @id @default(uuid()) @db.Uuid
+  ownerId    String?        @map("owner_id") // null for system-level events
+  actorType  AuditActorType @default(USER) @map("actor_type")
+  action     String         @db.VarChar(60) // e.g. ITEM_DELETED, ACCOUNT_DELETE_REQUESTED
+  targetType String?        @map("target_type") @db.VarChar(40)
+  targetId   String?        @map("target_id") @db.VarChar(64)
+  metadata   Json?          // structured, non-content metadata only
+  ipHash     String?        @map("ip_hash") @db.VarChar(64) // salted hash, never raw IP
+  createdAt  DateTime       @default(now())
+
+  // SetNull (not Cascade): on account purge the system trail is kept, anonymized (BR-08).
+  user User? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  @@index([ownerId, createdAt(sort: Desc)])
+  @@index([action, createdAt(sort: Desc)])
+  @@map("audit_events")
+}

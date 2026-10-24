@@ -1,0 +1,26 @@
+# OPTIONAL local PostgreSQL 16 fallback (was the primary path before ADR-005).
+# The primary development database is now a Supabase project (D2 amended — pooled
+# DATABASE_URL / direct DIRECT_URL, Free tier $0). Use this file only when you
+# specifically want an offline local DB; note Docker is not installed on the
+# currently inspected dev machine (R-08), which is what motivated the change.
+# Docs: docs/architecture/DATABASE_SCHEMA.md §7, docs/architecture/adr/ADR-005-supabase.md
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: smarthomeai-db
+    environment:
+      POSTGRES_USER: smarthomeai
+      POSTGRES_PASSWORD: smarthomeai
+      POSTGRES_DB: smarthomeai
+    ports:
+      - "5432:5432"
+    volumes:
+      - smarthomeai-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smarthomeai"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  smarthomeai-pg:
