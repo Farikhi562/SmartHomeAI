@@ -45,7 +45,7 @@ export function Select({
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           className={cx(
-            "h-9 w-full appearance-none rounded-md border bg-card px-3 pr-8 text-base text-foreground",
+            "h-12 w-full appearance-none rounded-md border bg-card px-3 pr-10 text-base text-foreground",
             "disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             error ? "border-destructive" : "border-input",
@@ -61,12 +61,12 @@ export function Select({
         />
       </div>
       {hint !== undefined && (
-        <p id={hintId} className="text-xs text-muted-foreground">
+        <p id={hintId} className="text-dense text-muted-foreground">
           {hint}
         </p>
       )}
       {error && (
-        <p id={errorId} role="alert" className="text-xs font-medium text-destructive">
+        <p id={errorId} role="alert" className="text-dense font-semibold text-destructive">
           {error}
         </p>
       )}

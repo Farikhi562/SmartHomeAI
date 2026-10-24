@@ -17,12 +17,12 @@ export function LocationSelect({
   locations,
   value,
   onChange,
-  label = "Location",
+  label = "Lokasi",
   hint,
   error,
   includeArchived = false,
   allowCreate = false,
-  placeholder = "No location",
+  placeholder = "Pilih lokasi",
   disabled = false,
   id,
 }: {
@@ -60,10 +60,10 @@ export function LocationSelect({
       {options.map((location) => (
         <option key={location.id} value={location.id}>
           {truncate(`${"\u00A0".repeat(location.depth * 2)}${location.path}`, 80)}
-          {location.archivedAt ? " (archived)" : ""}
+          {location.archivedAt ? " (diarsipkan)" : ""}
         </option>
       ))}
-      {allowCreate && <option value={CREATE_LOCATION_VALUE}>＋ Create a new location…</option>}
+      {allowCreate && <option value={CREATE_LOCATION_VALUE}>＋ Buat lokasi baru…</option>}
     </Select>
   );
 }

@@ -55,7 +55,7 @@ export function RecordLocationDialog({
     setFieldError(null);
 
     if (!locationId || locationId === CREATE_LOCATION_VALUE) {
-      setFieldError("Choose where the item is now.");
+      setFieldError("Pilih lokasi barang ini.");
       return;
     }
 
@@ -63,11 +63,11 @@ export function RecordLocationDialog({
     if (occurredAt) {
       const date = new Date(occurredAt);
       if (Number.isNaN(date.getTime())) {
-        setFieldError("Enter a valid date and time.");
+        setFieldError("Masukkan tanggal dan waktu yang valid.");
         return;
       }
       if (date.getTime() > Date.now() + FUTURE_SKEW_MS) {
-        setFieldError("The recorded time can't be in the future.");
+        setFieldError("Waktu pencatatan tidak boleh di masa depan.");
         return;
       }
       occurredAtIso = date.toISOString();
@@ -96,19 +96,19 @@ export function RecordLocationDialog({
     <Dialog
       open={open}
       onClose={onClose}
-      title="Record location"
+      title="Catat lokasi"
       description={
         item
-          ? `Where did you put “${item.name}”? This adds a new entry to its history.`
-          : "Where is the item now?"
+          ? `Di mana Anda menaruh “${item.name}”? Ini menambah entri baru ke riwayatnya.`
+          : "Di mana barang ini sekarang?"
       }
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={busy}>
-            Cancel
+            Batal
           </Button>
           <Button loading={busy} onClick={() => void submit()}>
-            Record
+            Catat
           </Button>
         </>
       }
@@ -130,36 +130,36 @@ export function RecordLocationDialog({
             setLocationId(value);
             setFieldError(null);
           }}
-          label="Location"
-          hint="Pick an existing location, or create a new one."
+          label="Lokasi"
+          hint="Pilih lokasi yang sudah ada, atau buat lokasi baru."
           error={fieldError && (!locationId || locationId === CREATE_LOCATION_VALUE) ? fieldError : null}
           allowCreate
         />
 
         <Input
-          label="When did you place it? (optional)"
+          label="Kapan Anda menaruhnya? (opsional)"
           type="datetime-local"
           value={occurredAt}
           onChange={(event) => {
             setOccurredAt(event.target.value);
             setFieldError(null);
           }}
-          hint="Leave blank for now. You can backdate if you remember the time."
+          hint="Kosongkan dulu bila tidak yakin. Anda boleh mengisi waktu lampau."
           error={
             fieldError && locationId && locationId !== CREATE_LOCATION_VALUE ? fieldError : null
           }
         />
 
         <Textarea
-          label="Note (optional)"
+          label="Catatan (opsional)"
           value={note}
           maxLength={300}
           onChange={(event) => setNote(event.target.value)}
-          hint="Anything that helps you remember — e.g. “top shelf, behind the boxes”."
+          hint="Apa pun yang membantu Anda mengingat — mis. “rak atas, di belakang kotak”."
         />
 
-        <p className="text-xs text-muted-foreground">
-          History is append-only — recording here never changes earlier entries.
+        <p className="text-dense text-muted-foreground">
+          Riwayat hanya-tambah — mencatat di sini tidak pernah mengubah entri sebelumnya.
         </p>
       </div>
     </Dialog>

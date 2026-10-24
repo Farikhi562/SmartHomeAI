@@ -5,6 +5,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 
 ## [Unreleased]
 
+### Decided — UI language & three P1 features in progress (2026-10-24, product-owner decision)
+- **UI in Bahasa Indonesia** for all user-visible text (audience: family members /
+  elderly parents); English retained for code, logs, documentation prose, and API error
+  `code` fields.
+- **Three features in progress** (implementation in flight; documentation updated, no
+  completion claimed): **ekspor data** (FR-022 → `GET /api/export` JSON file download),
+  **label cetak** (`/labels` print page), and **riwayat & saran pencarian** (`/search`
+  query chips + suggestions).
+- New IDs allocated: FR-031, FR-032 · US-030, US-031 · AC-031-1..2, AC-032-1..2 ·
+  T-089, T-090, T-091 (all `todo`) · planned tests E2E-031-1, UT-032-1, E2E-032-1.
+  FR-022 / AC-022-1 / US-021 / API_SPEC §3.7 aligned to the agreed export payload
+  `{ items, locations, events, preferences, exportedAt }` (conversations excluded by default).
+- `node tools/validate-docs.mjs` after these doc changes — **ALL CHECKS PASSED**
+  (62 files, 714 relative links, 23 Mermaid, 32 FRs / 18 P0, 56 AC, 31 US, 0 warnings);
+  evidence row in `docs/planning/TASK_BREAKDOWN.md` §4. Feature code itself is **not**
+  claimed verified — tasks T-089…T-091 remain `todo`.
+
 ### Changed — platform decision amendments (2026-10-17, product-owner decision)
 - **D2 → Supabase:** PostgreSQL 16 + Prisma now runs on **Supabase** (Free tier, $0) —
   pooled runtime `DATABASE_URL` (`?pgbouncer=true`) + direct `DIRECT_URL` for migrations;

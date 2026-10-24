@@ -49,6 +49,8 @@ P2 = roadmap only). AC references use the exact IDs defined in
 | US-027 | Share an inventory with my household | P2 | FR-028 | — |
 | US-028 | Connect smart-home/IoT tracking | P2 | FR-029 | — |
 | US-029 | Get guided onboarding as a new user | P1 | FR-030 | AC-030-1 |
+| US-030 | Print labels for my items | P1 | FR-031 | AC-031-1..2 |
+| US-031 | Reuse my search queries and get quick suggestions | P1 | FR-032 | AC-032-1..2 |
 
 ---
 
@@ -307,12 +309,12 @@ P2 = roadmap only). AC references use the exact IDs defined in
 | Field | Value |
 |---|---|
 | Role | Privacy-conscious user (P3; JTD-5) |
-| Statement | As a user, I want to download a JSON file of my items, aliases, locations, events, and (optionally) conversations, so that my data is portable and my exit is real |
+| Statement | As a user, I want to download a JSON file of my items, locations, events, and preferences (with conversations only on explicit opt-in), so that my data is portable and my exit is real |
 | Business value | Data portability is a trust feature and a regulatory-sane default; supports the deletion flow (FR-014) |
 | Priority | P1 |
 | FR refs | FR-022 |
 | AC refs | AC-022-1 |
-| Notes | `GET /api/export` for the authenticated owner only; audit event recorded; size-limited ≤ 10 MB then paginated; `includeConversations=false` by default (content minimization) |
+| Notes | `GET /api/export` for the authenticated owner only (file download, `Content-Disposition: attachment; filename="smarthomeai-ekspor-<date>.json"`); payload `{ items, locations, events, preferences, exportedAt }`; conversations excluded by default (`includeConversations=false`, content minimization); audit event recorded; size-limited ≤ 10 MB then paginated |
 
 ### US-029 — Get guided onboarding as a new user
 
@@ -325,6 +327,30 @@ P2 = roadmap only). AC references use the exact IDs defined in
 | FR refs | FR-030 |
 | AC refs | AC-030-1 |
 | Notes | Depends on FR-015 empty states; reuses the same validated services as normal creation (no separate onboarding data path) |
+
+### US-030 — Print labels for my items
+
+| Field | Value |
+|---|---|
+| Role | Physical organizer (P2 persona's "label the boxes" mode); family/elderly users |
+| Statement | As a user, I want to print a simple paper label for an item showing its name, its location path, and its category, so that a box or drawer on a shelf tells me what is inside and where it belongs without opening the app |
+| Business value | Paper is the interface elderly family members already trust; printing labels is the low-tech bridge into the digital memory (and the habit prerequisite for P2 QR/NFC scanning, FR-027) |
+| Priority | P1 |
+| FR refs | FR-031 |
+| AC refs | AC-031-1, AC-031-2 |
+| Notes | Route `/labels`, linked from the UI; purely client-side — reuses existing owner-scoped `GET /api/items` / `GET /api/locations` (no new endpoint); print-only CSS excludes app chrome; item name + location path + category per label |
+
+### US-031 — Reuse my search queries and get quick suggestions
+
+| Field | Value |
+|---|---|
+| Role | Repeat-query user (P1 persona's fast recall habit); elderly users who ask the same questions |
+| Statement | As a user, I want `/search` to remember my last 10 queries as removable chips and to suggest recent items and locations as one-tap chips, so that I can re-run a search or start one without typing |
+| Business value | Cuts the shortest path to deterministic recall (FR-005) to zero typing for the common repeat cases — a direct usability gain for less technical users |
+| Priority | P1 |
+| FR refs | FR-032 |
+| AC refs | AC-032-1, AC-032-2 |
+| Notes | Purely client-side: last-10 history in browser `localStorage` (most-recent-first, deduped, individually removable + clear-all), suggestion chips from existing `GET /api/items` / `GET /api/locations`; nothing extra persisted server-side; corrupt storage degrades to empty history |
 
 ---
 

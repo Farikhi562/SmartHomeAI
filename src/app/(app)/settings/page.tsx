@@ -29,25 +29,28 @@ import { cx } from "@/lib/cx";
 type Tab = "profile" | "preferences" | "privacy";
 
 const TABS: ReadonlyArray<{ value: Tab; label: string }> = [
-  { value: "profile", label: "Profile" },
-  { value: "preferences", label: "Preferences" },
-  { value: "privacy", label: "Privacy & data" },
+  { value: "profile", label: "Profil" },
+  { value: "preferences", label: "Preferensi" },
+  { value: "privacy", label: "Privasi & data" },
 ];
 
 const THEME_OPTIONS: ReadonlyArray<{ value: Theme; label: string; icon: typeof Sun }> = [
-  { value: "LIGHT", label: "Light", icon: Sun },
-  { value: "DARK", label: "Dark", icon: Moon },
-  { value: "SYSTEM", label: "System", icon: Monitor },
+  { value: "LIGHT", label: "Terang", icon: Sun },
+  { value: "DARK", label: "Gelap", icon: Moon },
+  { value: "SYSTEM", label: "Sistem", icon: Monitor },
 ];
+
+const memberSince = (value: string) =>
+  new Date(value).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
 
 export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>("profile");
 
   return (
     <>
-      <PageHeader title="Settings" subtitle="Your account, preferences, and data." />
+      <PageHeader title="Pengaturan" subtitle="Akun, preferensi, dan data Anda." />
 
-      <div role="tablist" aria-label="Settings sections" className="mb-5 flex gap-1 border-b border-border">
+      <div role="tablist" aria-label="Bagian pengaturan" className="mb-5 flex flex-wrap gap-1 border-b border-border">
         {TABS.map((option) => (
           <button
             key={option.value}
@@ -58,10 +61,10 @@ export default function SettingsPage() {
             aria-controls={`panel-${option.value}`}
             onClick={() => setTab(option.value)}
             className={cx(
-              "rounded-t-md px-4 py-2 text-dense font-medium",
+              "min-h-11 rounded-t-md px-3 py-2 text-base font-medium",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               tab === option.value
-                ? "border-b-2 border-primary text-foreground"
+                ? "border-b-2 border-primary font-semibold text-foreground"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
@@ -105,7 +108,7 @@ function ProfilePanel() {
     try {
       const updated = await api.updateMe({ displayName: values.displayName?.trim() || undefined });
       reset({ displayName: updated.displayName ?? "" });
-      toast({ title: "Profile saved", tone: "success" });
+      toast({ title: "Profil tersimpan", tone: "success" });
     } catch (error) {
       const apiError = toApiError(error);
       const issue = apiError.issueFor("displayName");
@@ -118,12 +121,12 @@ function ProfilePanel() {
     return (
       <Card>
         <CardContent className="flex flex-col gap-4">
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-2/3" />
-          <Skeleton className="h-9 w-32" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-2/3" />
+          <Skeleton className="h-11 w-40" />
         </CardContent>
         <span role="status" className="sr-only">
-          Loading profile
+          Memuat profil
         </span>
       </Card>
     );
@@ -138,21 +141,27 @@ function ProfilePanel() {
   return (
     <Card className="max-w-[560px]">
       <CardHeader>
-        <CardTitle>Profile</CardTitle>
+        <CardTitle>Profil</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(submit)} noValidate className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit(submit)} noValidate className="flex flex-col gap-5">
           {formError && (
             <p role="alert" className="rounded-md border border-destructive/40 bg-danger-surface p-3 text-dense text-destructive">
               {formError}
             </p>
           )}
 
-          <Input label="Email" value={me.email} disabled readOnly hint="Your sign-in address can't be changed here." />
+          <Input
+            label="Email"
+            value={me.email}
+            disabled
+            readOnly
+            hint="Alamat email untuk masuk tidak bisa diubah di sini."
+          />
 
           <Input
-            label="Display name"
-            placeholder="e.g. Sam Rivera"
+            label="Nama tampilan"
+            placeholder="mis. Budi Santoso"
             maxLength={120}
             error={errors.displayName?.message}
             aria-invalid={errors.displayName ? true : undefined}
@@ -161,13 +170,12 @@ function ProfilePanel() {
 
           <div>
             <Button type="submit" loading={isSubmitting} disabled={!isDirty}>
-              Save changes
+              Simpan perubahan
             </Button>
           </div>
 
-          <p className="text-xs text-muted-foreground">
-            Signed in as {me.email}. Member since{" "}
-            {new Date(me.createdAt).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" })}.
+          <p className="text-dense text-muted-foreground">
+            Masuk sebagai {me.email}. Anggota sejak {memberSince(me.createdAt)}.
           </p>
         </form>
       </CardContent>
@@ -188,7 +196,7 @@ function PreferencesPanel() {
     setSaving(true);
     try {
       await api.updatePreferences(patch);
-      toast({ title: "Preference saved", tone: "success" });
+      toast({ title: "Preferensi tersimpan", tone: "success" });
       prefsState.reload();
       router.refresh();
     } catch (error) {
@@ -202,11 +210,11 @@ function PreferencesPanel() {
     return (
       <Card className="max-w-[560px]">
         <CardContent className="flex flex-col gap-4">
-          <Skeleton className="h-16 w-full" />
-          <Skeleton className="h-9 w-48" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-11 w-52" />
         </CardContent>
         <span role="status" className="sr-only">
-          Loading preferences
+          Memuat preferensi
         </span>
       </Card>
     );
@@ -221,7 +229,7 @@ function PreferencesPanel() {
   return (
     <Card className="max-w-[560px]">
       <CardHeader>
-        <CardTitle>Preferences</CardTitle>
+        <CardTitle>Preferensi</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
         {formError && (
@@ -231,9 +239,9 @@ function PreferencesPanel() {
         )}
 
         <fieldset disabled={saving}>
-          <legend className="text-dense font-medium text-foreground">Theme</legend>
-          <p className="mt-1 text-xs text-muted-foreground">Applies instantly across the app.</p>
-          <div role="radiogroup" aria-label="Theme" className="mt-2 flex gap-2">
+          <legend className="text-base font-semibold text-foreground">Tema</legend>
+          <p className="mt-1 text-dense text-muted-foreground">Berlaku langsung di seluruh aplikasi.</p>
+          <div role="radiogroup" aria-label="Tema" className="mt-3 flex gap-3">
             {THEME_OPTIONS.map((option) => {
               const Icon = option.icon;
               const active = theme === option.value;
@@ -248,14 +256,14 @@ function PreferencesPanel() {
                     void update({ theme: option.value });
                   }}
                   className={cx(
-                    "flex flex-1 items-center justify-center gap-2 rounded-md border px-3 py-2 text-dense font-medium",
+                    "flex min-h-11 flex-1 items-center justify-center gap-2 rounded-md border px-3 py-2 text-base font-medium",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     active
-                      ? "border-primary bg-accent text-accent-foreground"
-                      : "border-border text-muted-foreground hover:bg-muted",
+                      ? "border-primary bg-accent font-semibold text-accent-foreground"
+                      : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
                   )}
                 >
-                  <Icon size={16} />
+                  <Icon size={18} />
                   {option.label}
                 </button>
               );
@@ -263,22 +271,22 @@ function PreferencesPanel() {
           </div>
         </fieldset>
 
-        <div className="flex items-center justify-between gap-4 border-t border-border pt-4">
-          <div>
-            <p className="text-dense font-medium text-foreground">Show suggested questions</p>
-            <p className="text-xs text-muted-foreground">
-              Example prompts above the assistant composer (FR-021).
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-4">
+          <div className="min-w-0">
+            <p className="text-base font-semibold text-foreground">Tampilkan pertanyaan saran</p>
+            <p className="text-dense text-muted-foreground">
+              Contoh pertanyaan di atas kolom tulis pesan asisten.
             </p>
           </div>
-          <label className="flex items-center gap-2 text-dense text-muted-foreground">
+          <label className="flex min-h-11 cursor-pointer items-center gap-3 text-base font-medium text-foreground">
             <input
               type="checkbox"
               checked={prefs?.showSuggestedQuestions ?? true}
               onChange={(event) => void update({ showSuggestedQuestions: event.target.checked })}
-              className="size-4 rounded border-input"
+              className="size-6 rounded border-input"
             />
-            <span className="sr-only">Show suggested questions</span>
-            {(prefs?.showSuggestedQuestions ?? true) ? "On" : "Off"}
+            <span className="sr-only">Tampilkan pertanyaan saran</span>
+            <span aria-hidden="true">{(prefs?.showSuggestedQuestions ?? true) ? "Aktif" : "Nonaktif"}</span>
           </label>
         </div>
       </CardContent>
@@ -290,62 +298,60 @@ function PrivacyPanel() {
   const meState = useAsync(() => api.me(), []);
 
   return (
-    <div className="flex max-w-[720px] flex-col gap-4">
+    <div className="flex max-w-[720px] flex-col gap-5">
       <Card>
         <CardHeader>
-          <CardTitle>What we store</CardTitle>
+          <CardTitle>Data yang kami simpan</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-3 text-dense text-foreground">
+        <CardContent className="flex flex-col gap-3 text-base text-foreground">
           <p>
-            Your items, locations, and the history of where you recorded them. Your assistant
-            conversations, so you can pick up where you left off.
+            Barang, lokasi, dan riwayat tempat Anda pernah mencatatnya. Percakapan dengan asisten
+            juga disimpan agar Anda bisa melanjutkan dari mana terakhir berhenti.
           </p>
           <p>
-            Location history is <strong>append-only</strong>: entries are never edited or deleted in
-            place — you correct a record by adding a new one.
+            Riwayat lokasi bersifat <strong>hanya-tambah</strong>: entri tidak pernah diedit atau
+            dihapus di tempat — Anda memperbaikinya dengan menambahkan catatan baru.
+          </p>
+          <p>Isi percakapan tidak pernah ditulis ke log aplikasi.</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Penyimpanan &amp; penghapusan</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3 text-base text-foreground">
+          <p>
+            Menghapus barang adalah penghapusan lunak: barang hilang dari tampilan segera dan
+            dihapus permanen setelah <strong>30 hari</strong>. Selama itu Anda masih bisa
+            memulihkannya.
           </p>
           <p>
-            Conversation content is never written to application logs (FR-023.3).
+            Anda bisa menghapus percakapan kapan saja dari halaman asisten — penghapusan itu bersifat
+            permanen dan langsung.
+          </p>
+          <p>
+            Menghapus akun langsung memblokir akses masuk, lalu seluruh data Anda dihapus permanen
+            setelah masa tenggang <strong>7 hari</strong>.
           </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Retention & deletion</CardTitle>
+          <CardTitle>Ekspor data Anda</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-3 text-dense text-foreground">
+        <CardContent className="flex flex-col gap-3 text-base text-foreground">
           <p>
-            Deleting an item is a soft delete: it disappears from your views immediately and is
-            permanently purged after <strong>30 days</strong> (BR-07). You can restore it in the
-            meantime.
+            Anda bisa mengunduh semua yang telah dicatat dalam format JSON — barang, lokasi, riwayat,
+            dan preferensi. Isi percakapan tidak disertakan agar ekspor tetap ringkas.
           </p>
-          <p>
-            You can delete a conversation at any time from the assistant — that is a permanent,
-            immediate deletion of its messages (FR-023).
-          </p>
-          <p>
-            Deleting your account blocks sign-in immediately, then fully purges your data after a{" "}
-            <strong>7-day</strong> grace period (FR-014.1).
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Export your data</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3 text-dense text-foreground">
-          <p>
-            You can download everything you&apos;ve recorded as JSON — items, locations, events, and
-            preferences. Conversations are excluded by default to keep the export minimal (FR-022).
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Export is a P1 feature and isn&apos;t wired up yet in this build.
+          <p className="text-dense text-muted-foreground">
+            Ekspor belum tersedia di versi ini.
           </p>
           <div>
             <Button variant="secondary" disabled>
-              Export data (coming soon)
+              Ekspor data (segera hadir)
             </Button>
           </div>
         </CardContent>
@@ -353,35 +359,37 @@ function PrivacyPanel() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-destructive">Delete account</CardTitle>
+          <CardTitle className="text-destructive">Hapus akun</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-3 text-dense text-foreground">
+        <CardContent className="flex flex-col gap-3 text-base text-foreground">
           <p>
-            This blocks your sign-in immediately, then permanently deletes your items, locations,
-            history, and conversations after a 7-day grace period. It cannot be undone.
+            Ini langsung memblokir akses masuk Anda, lalu menghapus barang, lokasi, riwayat, dan
+            percakapan secara permanen setelah masa tenggang 7 hari. Tindakan ini tidak bisa
+            dibatalkan.
           </p>
-          <p className="text-xs text-muted-foreground">
-            Account deletion is a P1 feature and isn&apos;t wired up yet in this build.
+          <p className="text-dense text-muted-foreground">
+            Penghapusan akun belum tersedia di versi ini.
           </p>
           <div>
             <Button variant="danger" disabled>
-              Delete my account (coming soon)
+              Hapus akun saya (segera hadir)
             </Button>
           </div>
         </CardContent>
       </Card>
 
       {meState.data && (
-        <p className="text-xs text-muted-foreground">
-          Signed in as {meState.data.email}.
-        </p>
+        <p className="text-dense text-muted-foreground">Masuk sebagai {meState.data.email}.</p>
       )}
-      <p className="text-xs text-muted-foreground">
+      <p className="text-base">
         <Link
           href="/dashboard"
-          className="text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+          className={cx(
+            "inline-flex min-h-11 items-center text-primary underline-offset-4 hover:underline",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm",
+          )}
         >
-          ← Back to dashboard
+          ← Kembali ke beranda
         </Link>
       </p>
     </div>

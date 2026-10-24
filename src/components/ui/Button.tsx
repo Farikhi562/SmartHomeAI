@@ -4,7 +4,7 @@ import { Spinner } from "@/components/ui/Spinner";
 
 /**
  * Button (DESIGN_SYSTEM §5): primary | secondary | ghost | danger | link,
- * sm (32 px) / md (36 px), loading state with `aria-busy`.
+ * sm / md — both ≥ 44 px tall (touch-friendly), loading state with `aria-busy`.
  */
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "link";
 export type ButtonSize = "sm" | "md";
@@ -28,8 +28,8 @@ const VARIANTS: Record<ButtonVariant, string> = {
 };
 
 const SIZES: Record<ButtonSize, string> = {
-  sm: "h-8 px-3",
-  md: "h-9 px-4",
+  sm: "h-11 px-4",
+  md: "h-12 px-5",
 };
 
 export function Button({

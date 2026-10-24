@@ -408,7 +408,11 @@ in [TEST_PLAN.md](../planning/TEST_PLAN.md)).
 | Rationale | Data portability + exit path |
 | Dependencies | All user tables |
 
-**Expected behavior:** Settings → Export downloads a JSON file (items, aliases, locations, events, conversations) as the authenticated owner only; audit event recorded; size-limited (≤ 10 MB, then paginated export).
+**Expected behavior:** Settings → Export downloads a JSON file (`GET /api/export`,
+`Content-Disposition: attachment; filename="smarthomeai-ekspor-<date>.json"`) whose payload is
+`{ items, locations, events, preferences, exportedAt }` as the authenticated owner only;
+**conversations are excluded by default** (content minimization, optional opt-in only);
+audit event recorded; size-limited (≤ 10 MB, then paginated export).
 **Test coverage:** IT-022-1 (contents + scoping)
 **Acceptance criteria:** AC-022-1
 
@@ -435,6 +439,32 @@ in [TEST_PLAN.md](../planning/TEST_PLAN.md)).
 **Expected behavior:** ≤ 3-step onboarding: create first locations (pre-filled suggestions), add first item, try an example question; skippable; not repeated.
 **Test coverage:** E2E-030-1
 **Acceptance criteria:** AC-030-1
+
+### FR-031 — Users can print labels for their items (label cetak)
+
+| Field | Value |
+|---|---|
+| Priority | P1 |
+| Rationale | Paper labels tie boxes/drawers to their records — especially helpful for family/elderly users who organize physically; prerequisite habit for the P2 QR/NFC scan (FR-027) |
+| Dependencies | FR-002 (items), FR-017 (location hierarchy); existing `GET /api/items` / `GET /api/locations` |
+
+**Expected behavior:** A dedicated `/labels` page renders printable labels — item name, location path, and category — using only the existing owner-scoped items/locations APIs (no new endpoint); print-only CSS keeps application chrome out of the printed output; the page is reachable from a UI navigation link; the feature is purely client-side rendering.
+**Error conditions:** items API failure → inline error state with retry (never a blank print sheet); no items → empty state offering "create item".
+**Test coverage:** E2E-031-1 (labels render + print-only CSS)
+**Acceptance criteria:** AC-031-1, AC-031-2
+
+### FR-032 — The search page keeps query history and offers quick suggestions (riwayat & saran pencarian)
+
+| Field | Value |
+|---|---|
+| Priority | P1 |
+| Rationale | Repetitive recall queries are the norm for this audience; history + suggestions shorten the path to "where is X" |
+| Dependencies | FR-005 (`/search` page); existing `GET /api/items`, `GET /api/locations` |
+
+**Expected behavior:** The `/search` page remembers the last 10 queries in browser `localStorage`, shown as individually removable chips (plus a clear-all control), and offers quick suggestion chips built from recent items and locations via existing APIs; the feature is purely client-side — no new endpoint and no query history stored server-side.
+**Error conditions:** missing/corrupt `localStorage` value → treated as empty history (page still works); history cap enforced at 10 (oldest dropped).
+**Test coverage:** UT-032-1 (history cap, dedupe, removal, storage fallback), E2E-032-1 (chips + suggestions render)
+**Acceptance criteria:** AC-032-1, AC-032-2
 
 ## P2 — Future (roadmap only; no implementation in this plan)
 

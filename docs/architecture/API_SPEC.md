@@ -193,7 +193,16 @@ Provider failure response (FR-013):
 
 | Method & path | FR | Description |
 |---|---|---|
-| `GET /api/export` | FR-022 | Streams `{ user, items, aliases, locations, events, conversations?, preferences }` as JSON for the authenticated owner only; records an audit event. `includeConversations=false` by default (content minimization) |
+| `GET /api/export` | FR-022 | **File download** (see note below) with payload `{ items, locations, events, preferences, exportedAt }`, owner-scoped to the authenticated session (`ownerId` from the verified token; session middleware, auth **required** → 401 otherwise); records a `DATA_EXPORTED` audit event. Conversations excluded by default (`includeConversations=false`, content minimization). F1 implementation in progress (decided 2026-10-24) |
+
+**File-download exception to the standard JSON envelope:** `GET /api/export` is the only
+endpoint that does not wrap its 200 body in the documented envelope/`requestId` shape — it
+responds with `Content-Type: application/json` plus
+`Content-Disposition: attachment; filename="smarthomeai-ekspor-<date>.json"` so the browser
+saves a file instead of rendering it. The JSON body **is** the payload object
+`{ items, locations, events, preferences, exportedAt }`. Every non-2xx response from this
+endpoint (401, 413, 500, …) still uses the standard [error envelope](#2-error-envelope-all-non-2xx-json-responses);
+no other endpoint may skip the envelope.
 
 ### 3.8 Images (P1) — FR-025
 

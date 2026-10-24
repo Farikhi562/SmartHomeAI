@@ -25,7 +25,7 @@ export function Badge({ tone = "muted", className, children, ...props }: BadgePr
   return (
     <span
       className={cx(
-        "inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-xs font-medium leading-4",
+        "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-dense font-medium leading-6",
         TONES[tone],
         className,
       )}

@@ -40,3 +40,10 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# Root-level debug scripts (throwaway auth/login debugging — may contain copied
+# secrets, e.g. test-jwt.mjs) — never commit
+/check-*.mjs
+/test-*.mjs
+/find-*.mjs
+/.tmp-*

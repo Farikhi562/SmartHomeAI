@@ -76,13 +76,13 @@ export function Dialog({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close dialog"
+            aria-label="Tutup dialog"
             className={cx(
-              "rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground",
+              "-mr-2 -mt-1 rounded-md p-3 text-muted-foreground hover:bg-muted hover:text-foreground",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             )}
           >
-            <X size={16} />
+            <X size={20} />
           </button>
         </div>
         {description && (
@@ -92,7 +92,7 @@ export function Dialog({
         )}
         {children && <div className="mt-4">{children}</div>}
         {footer && (
-          <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-border pt-4">{footer}</div>
+          <div className="mt-5 flex flex-wrap justify-end gap-3 border-t border-border pt-4">{footer}</div>
         )}
       </div>
     </div>,

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { MeDto } from "@/client/api";
+import { BottomNav } from "@/components/layout/BottomNav";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
 import { X } from "@/components/ui/icons";
@@ -39,10 +40,10 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-background">
       <a href="#main" className="skip-link">
-        Skip to main content
+        Lewati ke konten utama
       </a>
 
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 border-r border-sidebar-border lg:block">
+      <aside className="app-shell-chrome fixed inset-y-0 left-0 z-40 hidden w-60 border-r border-sidebar-border lg:block">
         <Sidebar />
       </aside>
 
@@ -51,18 +52,20 @@ export function AppShell({
         <main
           id="main"
           tabIndex={-1}
-          className="mx-auto w-full max-w-[1280px] px-4 py-6 outline-none sm:px-6 lg:px-8"
+          className="mx-auto w-full max-w-[1280px] px-4 pb-32 pt-6 outline-none sm:px-6 md:pb-10 lg:px-8"
         >
           {children}
         </main>
       </div>
+
+      <BottomNav />
 
       {drawerOpen && (
         <div
           className={cx("fixed inset-0 z-50 lg:hidden")}
           role="dialog"
           aria-modal="true"
-          aria-label="Navigation menu"
+          aria-label="Menu navigasi"
         >
           <div
             className="absolute inset-0 bg-black/50"
@@ -74,13 +77,13 @@ export function AppShell({
             <button
               type="button"
               onClick={() => setDrawerOpen(false)}
-              aria-label="Close navigation menu"
+              aria-label="Tutup menu navigasi"
               className={cx(
-                "absolute right-2 top-3 rounded-md p-2 text-sidebar-foreground hover:bg-sidebar-accent",
+                "absolute right-2 top-3 rounded-md p-3 text-sidebar-foreground hover:bg-sidebar-accent",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring-on-navy",
               )}
             >
-              <X size={16} />
+              <X size={20} />
             </button>
           </div>
         </div>

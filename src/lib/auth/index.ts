@@ -1,4 +1,4 @@
-import { jwtVerify, SignJWT } from "jose";
+import { createRemoteJWKSet, decodeProtectedHeader, jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { errors } from "@/lib/errors";
@@ -8,10 +8,10 @@ import { getEnv, isDevAuthAllowed, supabaseIssuer } from "@/lib/config/env";
  * Authentication module (FR-001, FR-012 — D5 amended 2026-10-17, ADR-005).
  *
  * Modes:
- *  - "supabase": verifies Supabase Auth (GoTrue) access tokens — HS256 with
- *    SUPABASE_JWT_SECRET, issuer `<SUPABASE_URL>/auth/v1`, audience
- *    `authenticated`. The production path; login/signup/refresh are proxied by
- *    our API routes so the session cookie stays httpOnly.
+ *  - "supabase": verifies Supabase Auth (GoTrue) access tokens with the
+ *    project's published JWKS (ES256/RS256). Legacy HS256 projects remain
+ *    supported through SUPABASE_JWT_SECRET. The production path; login/signup/
+ *    refresh are proxied by our API routes so the session cookie stays httpOnly.
  *  - "dev": local-only HS256 session JWTs minted by POST /api/auth/dev-login.
  *    Explicitly refused when NODE_ENV=production (isDevAuthAllowed).
  *
@@ -20,6 +20,9 @@ import { getEnv, isDevAuthAllowed, supabaseIssuer } from "@/lib/config/env";
  */
 
 export type AuthUser = { id: string; email: string };
+
+type SupabaseJwks = ReturnType<typeof createRemoteJWKSet>;
+const supabaseJwksByUrl = new Map<string, SupabaseJwks>();
 
 export const SESSION_COOKIE = "shai_session"; // access token; path=/
 export const REFRESH_COOKIE = "shai_refresh"; // refresh token; path=/api/auth
@@ -32,11 +35,36 @@ const REFRESH_COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // Supabase refresh token wind
 export async function verifyAccessToken(token: string): Promise<AuthUser> {
   const env = getEnv();
   if (env.AUTH_MODE === "supabase") {
-    if (!env.SUPABASE_JWT_SECRET) throw errors.unauthenticated("Supabase Auth is not configured.");
-    const { payload } = await jwtVerify(token, new TextEncoder().encode(env.SUPABASE_JWT_SECRET), {
-      issuer: supabaseIssuer(),
-      audience: "authenticated",
-    });
+    const issuer = supabaseIssuer();
+    const header = decodeProtectedHeader(token);
+    let payload;
+
+    if (header.alg === "HS256") {
+      // Supabase projects created with legacy JWT secrets still issue HS256
+      // tokens. Keep this path for backwards compatibility.
+      if (!env.SUPABASE_JWT_SECRET) throw errors.unauthenticated("Supabase Auth is not configured.");
+      ({ payload } = await jwtVerify(token, new TextEncoder().encode(env.SUPABASE_JWT_SECRET), {
+        issuer,
+        audience: "authenticated",
+        algorithms: ["HS256"],
+      }));
+    } else if (header.alg === "ES256" || header.alg === "RS256") {
+      // Current Supabase projects use asymmetric signing keys. The public key
+      // set is cached by jose and rotated by Supabase without redeploying us.
+      let jwks = supabaseJwksByUrl.get(issuer);
+      if (!jwks) {
+        jwks = createRemoteJWKSet(new URL(`${issuer}/.well-known/jwks.json`));
+        supabaseJwksByUrl.set(issuer, jwks);
+      }
+      ({ payload } = await jwtVerify(token, jwks, {
+        issuer,
+        audience: "authenticated",
+        algorithms: ["ES256", "RS256"],
+      }));
+    } else {
+      throw errors.unauthenticated();
+    }
+
     const sub = payload.sub;
     const email = typeof payload.email === "string" ? payload.email : undefined;
     if (!sub || !email) throw errors.unauthenticated();
@@ -139,8 +167,8 @@ async function gotrue(path: string, body: unknown): Promise<Response> {
 
 function errorDescription(data: unknown): string {
   if (data && typeof data === "object") {
-    const d = data as { error_description?: string; msg?: string; error?: string };
-    return d.error_description ?? d.msg ?? d.error ?? "";
+    const d = data as { error_description?: string; msg?: string; error?: string; error_code?: string };
+    return d.error_description ?? d.msg ?? d.error ?? d.error_code ?? "";
   }
   return "";
 }
@@ -151,13 +179,13 @@ export async function supabaseLogin(email: string, password: string): Promise<Se
   if (!res.ok) {
     const data: unknown = await res.json().catch(() => null);
     const desc = errorDescription(data);
+    if (desc.toLowerCase().includes("email not confirmed") || desc === "email_not_confirmed") {
+      throw errors.unauthenticated("Confirm your email address before signing in.");
+    }
     if (res.status === 400 || res.status === 401) {
       throw errors.unauthenticated("Invalid email or password.");
     }
     if (res.status === 429) throw errors.rateLimited(60);
-    if (desc.includes("Email not confirmed")) {
-      throw errors.unauthenticated("Confirm your email address before signing in.");
-    }
     throw errors.unauthenticated("Sign-in failed. Try again shortly.");
   }
   const data = (await res.json()) as {
@@ -165,6 +193,24 @@ export async function supabaseLogin(email: string, password: string): Promise<Se
     refresh_token: string;
     expires_in: number;
   };
+  return { accessToken: data.access_token, refreshToken: data.refresh_token, expiresIn: data.expires_in };
+}
+
+/** Exchange a Supabase OAuth PKCE authorization code for the app session tokens. */
+export async function supabasePkceExchange(authCode: string, codeVerifier: string): Promise<SessionTokens> {
+  const res = await gotrue("/token?grant_type=pkce", {
+    auth_code: authCode,
+    code_verifier: codeVerifier,
+  });
+  if (!res.ok) throw errors.unauthenticated("Google sign-in failed. Try again.");
+  const data = (await res.json()) as {
+    access_token?: string;
+    refresh_token?: string;
+    expires_in?: number;
+  };
+  if (!data.access_token || !data.refresh_token || !data.expires_in) {
+    throw errors.unauthenticated("Google sign-in failed. Try again.");
+  }
   return { accessToken: data.access_token, refreshToken: data.refresh_token, expiresIn: data.expires_in };
 }
 

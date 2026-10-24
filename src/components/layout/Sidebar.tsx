@@ -18,20 +18,20 @@ import {
 
 /**
  * Deep-navy primary navigation (INFORMATION_ARCHITECTURE §2.1):
- * single `nav[aria-label="Primary"]`, active item = accent bg + left indicator
- * bar + `aria-current="page"` (never colour alone).
+ * single `nav[aria-label="Navigasi utama"]`, active item = accent bg + left
+ * indicator bar + `aria-current="page"` (never colour alone).
  */
 export type NavItem = { label: string; href: string; icon: ComponentType<IconProps> };
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Inventory", href: "/inventory", icon: Box },
-  { label: "Locations", href: "/locations", icon: MapPin },
-  { label: "Search", href: "/search", icon: SearchIcon },
-  { label: "Assistant", href: "/assistant", icon: Sparkles },
+  { label: "Beranda", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Barang", href: "/inventory", icon: Box },
+  { label: "Lokasi", href: "/locations", icon: MapPin },
+  { label: "Cari", href: "/search", icon: SearchIcon },
+  { label: "Asisten", href: "/assistant", icon: Sparkles },
   // Listed in the primary nav per the app brief; IA marks Activity as P1 ("hidden until enabled").
-  { label: "Activity", href: "/activity", icon: History },
-  { label: "Settings", href: "/settings", icon: Settings },
+  { label: "Riwayat", href: "/activity", icon: History },
+  { label: "Pengaturan", href: "/settings", icon: Settings },
 ];
 
 export function isNavActive(pathname: string, href: string): boolean {
@@ -60,8 +60,8 @@ export function Sidebar({
         <span className="text-base font-semibold tracking-tight">SmartHomeAI</span>
       </div>
 
-      <nav aria-label="Primary" className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
-        <ul className="flex flex-col gap-1">
+      <nav aria-label="Navigasi utama" className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
+        <ul className="flex flex-col gap-2">
           {NAV_ITEMS.map((item) => {
             const active = isNavActive(pathname, item.href);
             const Icon = item.icon;
@@ -72,20 +72,20 @@ export function Sidebar({
                   aria-current={active ? "page" : undefined}
                   onClick={onNavigate}
                   className={cx(
-                    "relative flex min-h-9 items-center gap-3 rounded-md px-3 py-2 text-dense font-medium",
+                    "relative flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-base font-medium",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring-on-navy",
                     active
-                      ? "bg-sidebar-accent text-sidebar-foreground"
+                      ? "bg-sidebar-accent font-semibold text-sidebar-foreground"
                       : "text-sidebar-foreground hover:bg-sidebar-accent/70",
                   )}
                 >
                   {active && (
                     <span
                       aria-hidden="true"
-                      className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-sidebar-indicator"
+                      className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-full bg-sidebar-indicator"
                     />
                   )}
-                  <Icon size={16} className="shrink-0" />
+                  <Icon size={18} className="shrink-0" />
                   <span>{item.label}</span>
                 </Link>
               </li>
@@ -94,8 +94,8 @@ export function Sidebar({
         </ul>
       </nav>
 
-      <div className="shrink-0 border-t border-sidebar-border px-4 py-3 text-xs text-sidebar-foreground/70">
-        v0.1.0 · Personal belongings memory
+      <div className="shrink-0 border-t border-sidebar-border px-4 py-3 text-dense text-sidebar-foreground/80">
+        v0.1.0 · Catatan barang pribadi
       </div>
     </div>
   );

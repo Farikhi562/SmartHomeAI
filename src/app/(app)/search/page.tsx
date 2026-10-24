@@ -23,6 +23,7 @@ import { cx } from "@/lib/cx";
  * are shareable and the assistant's outage fallback can link straight here
  * (FR-013). Match-type badges come from the server's `matchType` — ranking is
  * exact > prefix > fuzzy > full-text, and never fabricated client-side.
+ * Copy is Bahasa Indonesia; touch targets ≥ 44 px for the elderly audience.
  */
 
 const MIN_QUERY = 2;
@@ -32,9 +33,9 @@ const PAGE_SIZE = 20;
 type TypeFilter = "all" | "items" | "locations";
 
 const TYPE_TABS: ReadonlyArray<{ value: TypeFilter; label: string }> = [
-  { value: "all", label: "All" },
-  { value: "items", label: "Items" },
-  { value: "locations", label: "Locations" },
+  { value: "all", label: "Semua" },
+  { value: "items", label: "Barang" },
+  { value: "locations", label: "Lokasi" },
 ];
 
 const MATCH_TONES: Record<string, "success" | "info" | "warning" | "muted"> = {
@@ -47,12 +48,12 @@ const MATCH_TONES: Record<string, "success" | "info" | "warning" | "muted"> = {
 function MatchBadge({ matchType }: { matchType: string }) {
   const label =
     matchType === "exact"
-      ? "Exact match"
+      ? "Cocok persis"
       : matchType === "prefix"
-        ? "Starts with"
+        ? "Awalan sama"
         : matchType === "fuzzy"
-          ? "Similar"
-          : "Full text";
+          ? "Mirip"
+          : "Teks lengkap";
   return <Badge tone={MATCH_TONES[matchType] ?? "muted"}>{label}</Badge>;
 }
 
@@ -67,10 +68,10 @@ export default function SearchPage() {
 function SearchSkeleton() {
   return (
     <>
-      <PageHeader title="Search" />
+      <PageHeader title="Cari" />
       <SkeletonRows rows={6} />
       <span role="status" className="sr-only">
-        Loading search results
+        Memuat hasil pencarian…
       </span>
     </>
   );
@@ -119,34 +120,37 @@ function SearchView() {
 
   return (
     <>
-      <PageHeader title="Search" subtitle="Deterministic search across your items and locations." />
+      <PageHeader title="Cari" subtitle="Pencarian pasti di semua barang dan lokasi Anda." />
 
-      <form role="search" onSubmit={submit} className="mb-4 flex items-center gap-2">
+      <form role="search" onSubmit={submit} className="mb-5 flex items-center gap-3">
         <div className="relative min-w-0 flex-1">
           <SearchIcon
             size={16}
+            aria-hidden="true"
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
           />
           <Input
             type="search"
-            aria-label="Search query"
-            placeholder="e.g. motorcycle keys"
+            aria-label="Kata kunci pencarian"
+            placeholder="Contoh: kunci motor"
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
-            className="pl-9"
+            className="min-h-12 pl-9 text-lg"
           />
         </div>
-        <Button type="submit">Search</Button>
+        <Button type="submit" className="min-h-12 text-lg">
+          Cari
+        </Button>
       </form>
 
       {truncated && (
-        <p role="status" className="mb-4 rounded-md border border-border bg-muted p-3 text-dense text-muted-foreground">
-          Your query was longer than {MAX_QUERY} characters and was shortened for this search.
+        <p role="status" className="mb-4 rounded-md border border-border bg-muted p-3 text-base text-foreground">
+          Kata kunci Anda lebih dari {MAX_QUERY} karakter dan sudah dipotong untuk pencarian ini.
         </p>
       )}
 
       {/* Type filter tabs */}
-      <div className="mb-4 flex gap-1" role="tablist" aria-label="Result type">
+      <div className="mb-4 flex flex-wrap gap-2" role="tablist" aria-label="Jenis hasil">
         {TYPE_TABS.map((tab) => (
           <button
             key={tab.value}
@@ -155,7 +159,7 @@ function SearchView() {
             aria-selected={type === tab.value}
             onClick={() => navigate({ type: tab.value === "all" ? null : tab.value })}
             className={cx(
-              "rounded-md px-3 py-1.5 text-dense font-medium",
+              "min-h-11 rounded-md px-4 py-2 text-base font-medium",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               type === tab.value
                 ? "bg-accent text-accent-foreground"
@@ -171,8 +175,8 @@ function SearchView() {
         <EmptyState
           headingLevel={2}
           icon={<SearchIcon size={32} />}
-          title="Keep typing"
-          description={`${MIN_QUERY} characters minimum — the search needs a little more to go on.`}
+          title="Terus mengetik saja"
+          description={`Minimal ${MIN_QUERY} karakter — pencarian butuh sedikit lebih banyak lagi.`}
         />
       )}
 
@@ -180,8 +184,8 @@ function SearchView() {
         <EmptyState
           headingLevel={2}
           icon={<SearchIcon size={32} />}
-          title="Search your records"
-          description="Find an item by name, category, or note — or a location by path."
+          title="Cari di catatan Anda"
+          description="Temukan barang berdasarkan nama, kategori, atau catatan — atau lokasi berdasarkan namanya."
         />
       )}
 
@@ -193,18 +197,18 @@ function SearchView() {
         <EmptyState
           headingLevel={2}
           icon={<SearchIcon size={32} />}
-          title={`No results for “${truncate(q, 40)}”`}
-          description="Try a shorter or different term — or create the item if it doesn't exist yet."
+          title={`Tidak ada hasil untuk “${truncate(q, 40)}”`}
+          description="Coba kata kunci yang lebih pendek atau berbeda — atau tambahkan barangnya jika belum tercatat."
           action={
             <Link
               href={`/inventory/new?name=${encodeURIComponent(q)}`}
               className={cx(
-                "inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-base font-medium text-primary-foreground hover:bg-primary-hover",
+                "inline-flex min-h-11 items-center gap-2 rounded-md bg-primary px-4 text-lg font-medium text-primary-foreground hover:bg-primary-hover",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               )}
             >
-              <Plus size={16} />
-              Create item “{truncate(q, 24)}”
+              <Plus size={16} aria-hidden="true" />
+              Tambahkan “{truncate(q, 24)}”
             </Link>
           }
         />
@@ -212,26 +216,26 @@ function SearchView() {
 
       {showResults && total > 0 && (
         <>
-          <p className="mb-3 text-dense text-muted-foreground" aria-live="polite">
-            {total} result{total === 1 ? "" : "s"}
+          <p className="mb-3 text-base text-muted-foreground" aria-live="polite">
+            {total} hasil
           </p>
 
           {items.length > 0 && (
             <section aria-labelledby="items-results" className="mb-6">
-              <h2 id="items-results" className="mb-2 text-base font-semibold text-foreground">
-                Items
+              <h2 id="items-results" className="mb-2 text-lg font-semibold text-foreground">
+                Barang
               </h2>
-              <ul className="flex flex-col gap-2">
+              <ul className="flex flex-col gap-3">
                 {items.map((item) => (
                   <li
                     key={item.id}
-                    className="rounded-lg border border-border bg-card p-3 shadow-subtle transition-colors hover:bg-muted/40"
+                    className="rounded-lg border border-border bg-card p-4 shadow-subtle transition-colors hover:bg-muted/40"
                   >
                     <div className="flex flex-wrap items-center gap-2">
                       <Link
                         href={`/inventory/${item.id}`}
                         className={cx(
-                          "text-base font-medium text-foreground underline-offset-4 hover:underline",
+                          "text-lg font-medium text-foreground underline-offset-4 hover:underline",
                           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm",
                         )}
                       >
@@ -243,8 +247,8 @@ function SearchView() {
                       )}
                     </div>
                     {item.lastLocation ? (
-                      <p className="mt-1 text-dense text-muted-foreground">
-                        <MapPin size={12} className="mr-1 inline" />
+                      <p className="mt-1 text-base text-muted-foreground">
+                        <MapPin size={12} className="mr-1 inline" aria-hidden="true" />
                         {item.lastLocation.path} —{" "}
                         <time
                           dateTime={toDateTimeAttr(item.lastLocation.occurredAt)}
@@ -254,7 +258,7 @@ function SearchView() {
                         </time>
                       </p>
                     ) : (
-                      <p className="mt-1 text-dense text-muted-foreground">Never recorded</p>
+                      <p className="mt-1 text-base text-muted-foreground">Belum pernah dicatat</p>
                     )}
                   </li>
                 ))}
@@ -264,28 +268,28 @@ function SearchView() {
 
           {locations.length > 0 && (
             <section aria-labelledby="locations-results" className="mb-6">
-              <h2 id="locations-results" className="mb-2 text-base font-semibold text-foreground">
-                Locations
+              <h2 id="locations-results" className="mb-2 text-lg font-semibold text-foreground">
+                Lokasi
               </h2>
-              <ul className="flex flex-col gap-2">
+              <ul className="flex flex-col gap-3">
                 {locations.map((location) => (
                   <li
                     key={location.id}
-                    className="rounded-lg border border-border bg-card p-3 shadow-subtle transition-colors hover:bg-muted/40"
+                    className="rounded-lg border border-border bg-card p-4 shadow-subtle transition-colors hover:bg-muted/40"
                   >
                     <div className="flex flex-wrap items-center gap-2">
                       <Link
                         href={`/locations?locationId=${location.id}`}
                         className={cx(
-                          "text-base font-medium text-foreground underline-offset-4 hover:underline",
+                          "text-lg font-medium text-foreground underline-offset-4 hover:underline",
                           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm",
                         )}
                       >
                         {location.path}
                       </Link>
                       {location.matchType && <MatchBadge matchType={location.matchType} />}
-                      {location.archivedAt && <Badge tone="muted">Archived</Badge>}
-                      <Badge tone="outline">Depth {location.depth ?? "?"}</Badge>
+                      {location.archivedAt && <Badge tone="muted">Diarsipkan</Badge>}
+                      <Badge tone="outline">Tingkat {location.depth ?? "?"}</Badge>
                     </div>
                   </li>
                 ))}
@@ -303,8 +307,8 @@ function SearchView() {
       )}
 
       {showResults && items.length === 0 && locations.length === 0 && total > 0 && (
-        <p className="text-dense text-muted-foreground">
-          No results of the selected type — try the “All” tab.
+        <p className="text-base text-muted-foreground">
+          Tidak ada hasil untuk jenis yang dipilih — coba tab “Semua”.
         </p>
       )}
     </>

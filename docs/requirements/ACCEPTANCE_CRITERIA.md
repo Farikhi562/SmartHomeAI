@@ -16,7 +16,7 @@ Status codes used below: 400 `VALIDATION_ERROR` · 401 `UNAUTHENTICATED` · 404 
 `RATE_LIMITED` · 503 `AI_UNAVAILABLE` · 201/200 success. P2 FRs (FR-026–FR-029) have no
 enumerated ACs until they enter an implementation release.
 
-**Enumerated total:** 52 criteria across 26 FRs.
+**Enumerated total:** 56 criteria across 28 FRs.
 
 ---
 
@@ -327,9 +327,9 @@ enumerated ACs until they enter an implementation release.
 ## FR-022 — Users can export their data
 
 **AC-022-1 — Export contains exactly the owner's records and is audited**
-- **Given** an authenticated owner with items, aliases, locations, events, and conversations,
+- **Given** an authenticated owner with items, locations, events, and preferences (and conversations stored),
 - **When** they request export (`GET /api/export`),
-- **Then** a JSON download streams their own records only (no other user's data, conversations excluded by default), stays within the ≤ 10 MB cap or switches to paginated export, and an audit event `DATA_EXPORTED` is recorded.
+- **Then** the response is a JSON file download (`Content-Type: application/json` plus `Content-Disposition: attachment; filename="smarthomeai-ekspor-<date>.json"`) whose payload is exactly `{ items, locations, events, preferences, exportedAt }` for that owner only (no other user's data, conversations excluded by default), stays within the ≤ 10 MB cap or switches to paginated export, and an audit event `DATA_EXPORTED` is recorded.
 
 ---
 
@@ -381,3 +381,31 @@ enumerated ACs until they enter an implementation release.
 - **Given** a user who signed up within the session and has no items/locations,
 - **When** they land in the app,
 - **Then** an onboarding flow of ≤ 3 steps (create first locations from pre-filled suggestions → add first item → try an example question) appears, can be skipped at any step, completes against the same validated services as normal creation, and never appears again after completion or skipping.
+
+---
+
+## FR-031 — Users can print labels for their items (label cetak)
+
+**AC-031-1 — Labels render item name, location path, and category from existing data**
+- **Given** an authenticated owner with items assigned to locations in the hierarchy,
+- **When** they open the `/labels` page (linked from the UI navigation),
+- **Then** one printable label per item renders showing the item name, the full location path, and the category, sourced from the existing owner-scoped `GET /api/items` (no new endpoint), and items without a recorded location show an explicit empty location value rather than a fabricated one.
+
+**AC-031-2 — Print output contains labels only**
+- **Given** the same `/labels` page in the browser,
+- **When** the user opens the print dialog / prints to PDF,
+- **Then** print-only CSS excludes application chrome (navigation, buttons, page header) so only the labels are printed, labels fit the page without horizontal overflow, and a failed items request shows an inline error with retry instead of an empty print sheet.
+
+---
+
+## FR-032 — The search page keeps query history and offers quick suggestions (riwayat & saran pencarian)
+
+**AC-032-1 — Last 10 queries persist as removable chips, client-side only**
+- **Given** an owner who submits more than 10 searches on `/search` in the browser,
+- **When** the page reloads (and when a chip is removed),
+- **Then** the last 10 distinct queries are shown as chips in most-recent-first order (older entries dropped, duplicates collapsed), each chip is individually removable with a clear-all control, the history survives reload via `localStorage`, and no query history is persisted server-side.
+
+**AC-032-2 — Suggestion chips come from the owner's recent items and locations**
+- **Given** the same `/search` page with recent items and locations,
+- **When** the suggestions render (and separately, when `localStorage` is missing or corrupt),
+- **Then** quick suggestion chips are built from existing owner-scoped items/locations APIs (each chip runs that value as a search), and a corrupt or absent `localStorage` value is treated as empty history without breaking the page.

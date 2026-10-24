@@ -37,11 +37,11 @@ export function Pagination({ limit, offset, total, onChange, className }: Pagina
   const last = Math.min(total, offset + safeLimit);
 
   return (
-    <nav aria-label="Pagination" className={cx("flex flex-wrap items-center justify-between gap-3", className)}>
+    <nav aria-label="Navigasi halaman" className={cx("flex flex-wrap items-center justify-between gap-3", className)}>
       <p className="text-dense text-muted-foreground" aria-live="polite">
-        Showing {first}–{last} of {total}
+        Menampilkan {first}–{last} dari {total}
       </p>
-      <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center gap-3">
         <Button
           variant="secondary"
           size="sm"
@@ -50,7 +50,7 @@ export function Pagination({ limit, offset, total, onChange, className }: Pagina
           onClick={() => onChange(Math.max(0, offset - safeLimit))}
           iconLeft={<ChevronLeft size={14} />}
         >
-          Previous
+          Sebelumnya
         </Button>
         {pageList(current, count).map((entry, index) =>
           entry === "gap" ? (
@@ -63,7 +63,7 @@ export function Pagination({ limit, offset, total, onChange, className }: Pagina
               variant={entry === current ? "secondary" : "ghost"}
               size="sm"
               aria-current={entry === current ? "page" : undefined}
-              aria-label={`Page ${entry}`}
+              aria-label={`Halaman ${entry}`}
               onClick={() => onChange((entry - 1) * safeLimit)}
               className={entry === current ? "font-semibold" : undefined}
             >
@@ -79,7 +79,7 @@ export function Pagination({ limit, offset, total, onChange, className }: Pagina
           onClick={() => onChange(offset + safeLimit)}
           iconRight={<ChevronRight size={14} />}
         >
-          Next
+          Berikutnya
         </Button>
       </div>
     </nav>

@@ -45,18 +45,20 @@ export class ApiError extends Error {
 }
 
 export const errors = {
-  validation: (details: { path: string; issue: string }[], message = "Invalid request.") =>
+  validation: (details: { path: string; issue: string }[], message = "Permintaan tidak valid.") =>
     new ApiError("VALIDATION_ERROR", message, { details }),
-  unauthenticated: (message = "Sign in to continue.") => new ApiError("UNAUTHENTICATED", message),
-  notFound: (what = "Resource") => new ApiError("NOT_FOUND", `${what} not found.`),
+  unauthenticated: (message = "Masuk untuk melanjutkan.") => new ApiError("UNAUTHENTICATED", message),
+  notFound: (what = "Data") => new ApiError("NOT_FOUND", `${what} tidak ditemukan.`),
   conflict: (message: string, extra?: Record<string, unknown>) => new ApiError("CONFLICT", message, { extra }),
   rateLimited: (retryAfterSec: number) =>
-    new ApiError("RATE_LIMITED", "Too many requests. Please slow down.", { extra: { retryAfter: retryAfterSec } }),
+    new ApiError("RATE_LIMITED", "Terlalu banyak permintaan. Mohon tunggu sebentar.", {
+      extra: { retryAfter: retryAfterSec },
+    }),
   aiUnavailable: (fallback?: unknown) =>
-    new ApiError("AI_UNAVAILABLE", "The assistant is temporarily unavailable. Your records are safe.", {
+    new ApiError("AI_UNAVAILABLE", "Asisten sedang tidak tersedia untuk sementara. Data Anda tetap aman.", {
       extra: fallback !== undefined ? { fallback } : undefined,
     }),
-  internal: () => new ApiError("INTERNAL", "Something went wrong on our end."),
+  internal: () => new ApiError("INTERNAL", "Terjadi kesalahan di sisi kami."),
 };
 
 export interface ErrorPayload {
@@ -74,6 +76,6 @@ export function toErrorPayload(err: unknown, requestId: string): { status: numbe
   // Unknown errors: log server-side, return generic envelope (no internals leaked).
   return {
     status: 500,
-    body: { error: { code: "INTERNAL", message: "Something went wrong on our end.", requestId } },
+    body: { error: { code: "INTERNAL", message: "Terjadi kesalahan di sisi kami.", requestId } },
   };
 }

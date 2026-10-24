@@ -22,10 +22,11 @@ import { cx } from "@/lib/cx";
  * Duplicate names are allowed but warned (FR-002.4) — the server answers 200
  * with a `DUPLICATE_NAME` warning that renders as a non-blocking banner with a
  * link to the existing item; saving is never prevented.
+ * Copy is Bahasa Indonesia; touch targets ≥ 44 px for the elderly audience.
  */
 
 const linkButtonBase =
-  "inline-flex h-9 items-center rounded-md px-4 text-base font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+  "inline-flex min-h-11 items-center rounded-md px-4 text-lg font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
 export default function NewItemPage() {
   return (
@@ -38,18 +39,18 @@ export default function NewItemPage() {
 function FormSkeleton() {
   return (
     <>
-      <PageHeader title="New item" breadcrumbs={[{ label: "Inventory", href: "/inventory" }, { label: "New item" }]} />
+      <PageHeader title="Barang baru" breadcrumbs={[{ label: "Barang", href: "/inventory" }, { label: "Barang baru" }]} />
       <div className="mx-auto max-w-[720px] rounded-lg border border-border bg-card p-6 shadow-subtle">
         <div className="flex flex-col gap-5">
           <div className="h-4 w-24 animate-pulse rounded bg-muted" aria-hidden="true" />
-          <div className="h-9 w-full animate-pulse rounded-md bg-muted" aria-hidden="true" />
+          <div className="h-12 w-full animate-pulse rounded-md bg-muted" aria-hidden="true" />
           <div className="h-4 w-32 animate-pulse rounded bg-muted" aria-hidden="true" />
           <div className="h-24 w-full animate-pulse rounded-md bg-muted" aria-hidden="true" />
-          <div className="h-9 w-40 animate-pulse rounded-md bg-muted" aria-hidden="true" />
+          <div className="h-12 w-40 animate-pulse rounded-md bg-muted" aria-hidden="true" />
         </div>
       </div>
       <span role="status" className="sr-only">
-        Loading form
+        Memuat formulir…
       </span>
     </>
   );
@@ -116,7 +117,7 @@ function NewItemForm() {
         });
       }
 
-      toast({ title: "Item created", description: result.item.name, tone: "success" });
+      toast({ title: "Barang ditambahkan", description: result.item.name, tone: "success" });
       router.push(`/inventory/${result.item.id}`);
       router.refresh();
     } catch (error) {
@@ -130,7 +131,7 @@ function NewItemForm() {
         const items = apiError.numberExtra("referencedByItems");
         setFormError(
           items !== undefined
-            ? `That location is referenced by ${items} item(s). Unarchive or pick another.`
+            ? `Lokasi tersebut masih dirujuk oleh ${items} barang. Pulihkan dulu lokasinya, atau pilih lokasi lain.`
             : apiError.message,
         );
         return;
@@ -142,15 +143,15 @@ function NewItemForm() {
   return (
     <>
       <PageHeader
-        title="New item"
-        subtitle="Name it, optionally say where it is right now."
-        breadcrumbs={[{ label: "Inventory", href: "/inventory" }, { label: "New item" }]}
+        title="Barang baru"
+        subtitle="Beri nama barangnya, dan isi letaknya sekarang jika mau."
+        breadcrumbs={[{ label: "Barang", href: "/inventory" }, { label: "Barang baru" }]}
       />
 
       {duplicateWarning && (
         <div
           role="status"
-          className="mx-auto mb-4 flex max-w-[720px] items-start gap-2 rounded-md border border-warning/40 bg-warning-surface p-3 text-dense text-warning"
+          className="mx-auto mb-4 flex max-w-[720px] items-start gap-2 rounded-md border border-warning/40 bg-warning-surface p-3 text-base text-warning"
         >
           <span className="min-w-0">
             {duplicateWarning.message}{" "}
@@ -159,10 +160,10 @@ function NewItemForm() {
                 href={`/inventory/${duplicateWarning.itemId}`}
                 className="font-medium underline underline-offset-4"
               >
-                View existing item
+                Lihat barang yang sudah ada
               </Link>
             )}{" "}
-            — you can still save this one.
+            — Anda tetap bisa menyimpan barang ini.
           </span>
         </div>
       )}
@@ -170,79 +171,81 @@ function NewItemForm() {
       <form
         onSubmit={handleSubmit(onSubmit)}
         noValidate
-        className="mx-auto max-w-[720px] rounded-lg border border-border bg-card p-6 shadow-subtle"
+        className="mx-auto flex max-w-[720px] flex-col gap-5 rounded-lg border border-border bg-card p-6 shadow-subtle"
       >
         {formError && (
           <p
             role="alert"
-            className="mb-5 rounded-md border border-destructive/40 bg-danger-surface p-3 text-dense text-destructive"
+            className="rounded-md border border-destructive/40 bg-danger-surface p-3 text-base text-destructive"
           >
             {formError}
           </p>
         )}
 
-        <div className="flex flex-col gap-5">
+        <Input
+          label="Nama"
+          placeholder="Contoh: kunci motor"
+          maxLength={120}
+          error={errors.name?.message}
+          aria-invalid={errors.name ? true : undefined}
+          className="min-h-12 text-lg"
+          {...register("name")}
+        />
+
+        <Textarea
+          label="Deskripsi (opsional)"
+          placeholder="Apa pun yang membantu Anda mengenalinya nanti."
+          maxLength={2000}
+          error={errors.description?.message}
+          className="text-lg"
+          {...register("description")}
+        />
+
+        <div>
           <Input
-            label="Name"
-            placeholder="e.g. Motorcycle keys"
-            maxLength={120}
-            error={errors.name?.message}
-            aria-invalid={errors.name ? true : undefined}
-            {...register("name")}
+            label="Kategori (opsional)"
+            placeholder="Contoh: perkakas"
+            maxLength={60}
+            hint="Tulis bebas dengan huruf kecil. Saran muncul dari kategori barang Anda yang sudah ada."
+            list="category-suggestions"
+            error={errors.category?.message}
+            className="min-h-12 text-lg"
+            {...register("category")}
           />
+          <datalist id="category-suggestions">
+            {categorySuggestions.map((category) => (
+              <option key={category} value={category} />
+            ))}
+          </datalist>
+        </div>
 
-          <Textarea
-            label="Description (optional)"
-            placeholder="Anything that helps you identify it."
-            maxLength={2000}
-            error={errors.description?.message}
-            {...register("description")}
-          />
+        <LocationSelect
+          locations={locationsState.data?.locations ?? []}
+          value={locationValue}
+          onChange={(value) => {
+            setValue("locationId", value || undefined, { shouldDirty: true, shouldValidate: true });
+            setFormError(null);
+          }}
+          label="Di mana letaknya sekarang? (opsional)"
+          hint="Boleh dikosongkan — lokasi bisa dicatat nanti."
+          placeholder="Belum ada lokasi"
+          allowCreate
+        />
 
-          <div>
-            <Input
-              label="Category (optional)"
-              placeholder="e.g. tools"
-              maxLength={60}
-              hint="Lowercase free text. Suggestions come from your existing items."
-              list="category-suggestions"
-              error={errors.category?.message}
-              {...register("category")}
-            />
-            <datalist id="category-suggestions">
-              {categorySuggestions.map((category) => (
-                <option key={category} value={category} />
-              ))}
-            </datalist>
-          </div>
-
-          <LocationSelect
-            locations={locationsState.data?.locations ?? []}
-            value={locationValue}
-            onChange={(value) => {
-              setValue("locationId", value || undefined, { shouldDirty: true, shouldValidate: true });
-              setFormError(null);
-            }}
-            label="Where is it right now? (optional)"
-            hint="You can leave this blank and record a location later."
-            allowCreate
-          />
-
-          <div className="flex items-center gap-2 border-t border-border pt-5">
-            <Button type="submit" loading={isSubmitting}>
-              Save item
-            </Button>
-            <Link
-              href="/inventory"
-              className={cx(
-                linkButtonBase,
-                "border border-border-strong bg-secondary text-secondary-foreground hover:bg-muted",
-              )}
-            >
-              Cancel
-            </Link>
-            {isSubmitting && <Spinner className="ml-2 size-4 text-muted-foreground" />}
-          </div>
+        <div className="flex flex-wrap items-center gap-3 border-t border-border pt-5">
+          <Button type="submit" loading={isSubmitting} className="min-h-12 text-lg">
+            Simpan barang
+          </Button>
+          <Link
+            href="/inventory"
+            className={cx(
+              linkButtonBase,
+              "border border-border-strong bg-secondary text-secondary-foreground hover:bg-muted",
+            )}
+          >
+            Batal
+          </Link>
+          {isSubmitting && <Spinner className="size-4 text-muted-foreground" aria-hidden="true" />}
         </div>
       </form>
     </>

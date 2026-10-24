@@ -26,6 +26,7 @@ import { cx } from "@/lib/cx";
  * right, deep-linkable via `?locationId=`. Hierarchy is capped at depth 3
  * (BR-04); archive is blocked while items/events reference the location and the
  * 409 body supplies the exact counts (BR-05, FR-017.2).
+ * Copy is Bahasa Indonesia; touch targets ≥ 44 px for the elderly audience.
  */
 
 const MAX_DEPTH = 3;
@@ -77,13 +78,13 @@ export default function LocationsPage() {
 function LocationsSkeleton() {
   return (
     <>
-      <PageHeader title="Locations" />
+      <PageHeader title="Lokasi" />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[340px_minmax(0,1fr)]">
         <Skeleton className="h-96 rounded-lg" />
         <Skeleton className="h-96 rounded-lg" />
       </div>
       <span role="status" className="sr-only">
-        Loading locations
+        Memuat lokasi…
       </span>
     </>
   );
@@ -140,14 +141,14 @@ function LocationsView() {
       await api.locations.archive(archiveTarget.id);
       setArchiveTarget(null);
       locationsState.reload();
-      toast({ title: "Location archived", tone: "success" });
+      toast({ title: "Lokasi diarsipkan", tone: "success" });
     } catch (error) {
       const apiError = toApiError(error);
       if (apiError.code === "CONFLICT") {
         const items = apiError.numberExtra("referencedByItems") ?? 0;
         const events = apiError.numberExtra("referencedByEvents") ?? 0;
         setArchiveError(
-          `This location is still referenced by ${items} item(s) and ${events} recorded event(s). Update those records first, or archive the items.`,
+          `Lokasi ini masih dirujuk oleh ${items} barang dan ${events} catatan. Perbarui catatan tersebut terlebih dahulu, atau arsipkan barangnya.`,
         );
         return;
       }
@@ -166,14 +167,14 @@ function LocationsView() {
       setDeleteTarget(null);
       if (selectedId === deleteTarget.id) select(null);
       locationsState.reload();
-      toast({ title: "Location deleted", tone: "success" });
+      toast({ title: "Lokasi dihapus", tone: "success" });
     } catch (error) {
       const apiError = toApiError(error);
       if (apiError.code === "CONFLICT") {
         const items = apiError.numberExtra("referencedByItems") ?? 0;
         const events = apiError.numberExtra("referencedByEvents") ?? 0;
         setDeleteError(
-          `This location is still referenced by ${items} item(s) and ${events} recorded event(s).`,
+          `Lokasi ini masih dirujuk oleh ${items} barang dan ${events} catatan.`,
         );
         return;
       }
@@ -186,11 +187,11 @@ function LocationsView() {
   return (
     <>
       <PageHeader
-        title="Locations"
-        subtitle="A simple, shallow hierarchy — at most three levels deep."
+        title="Lokasi"
+        subtitle="Struktur sederhana — paling dalam tiga tingkat."
         actions={
-          <Button onClick={() => setCreateOpen(true)} iconLeft={<Plus size={16} />}>
-            New location
+          <Button className="min-h-11 text-lg" onClick={() => setCreateOpen(true)} iconLeft={<Plus size={16} aria-hidden="true" />}>
+            Lokasi baru
           </Button>
         }
       />
@@ -203,44 +204,48 @@ function LocationsView() {
         {/* Tree pane */}
         <Card className="h-fit">
           <CardHeader>
-            <CardTitle>All locations</CardTitle>
-            <label className="flex items-center gap-2 text-dense text-muted-foreground">
+            <CardTitle>Semua lokasi</CardTitle>
+            <label className="flex min-h-11 cursor-pointer items-center gap-2 text-base text-foreground">
               <input
                 type="checkbox"
                 checked={includeArchived}
                 onChange={(event) => setIncludeArchived(event.target.checked)}
-                className="size-4 rounded border-input"
+                className="size-5 rounded border-input"
               />
-              Include archived
+              Tampilkan yang diarsipkan
             </label>
           </CardHeader>
           <CardContent>
             {locationsState.loading && (
               <div className="flex flex-col gap-2" aria-hidden="true">
                 {[0, 1, 2, 3].map((index) => (
-                  <Skeleton key={index} className="h-7 w-full" />
+                  <Skeleton key={index} className="h-9 w-full" />
                 ))}
               </div>
             )}
 
             {!locationsState.loading && locations.length === 0 && (
               <div className="flex flex-col gap-3">
-                <p className="text-dense text-muted-foreground">No locations yet.</p>
-                <p className="text-xs text-muted-foreground">A few to get you started:</p>
-                <ul className="flex flex-col gap-1 text-xs text-muted-foreground">
-                  <li>· Home › Bedroom drawer</li>
-                  <li>· Home › Garage shelf</li>
-                  <li>· Office › Desk</li>
+                <p className="text-base text-foreground">Belum ada lokasi.</p>
+                <p className="text-base text-muted-foreground">Beberapa contoh untuk memulai:</p>
+                <ul className="flex flex-col gap-1 text-base text-muted-foreground">
+                  <li>· Rumah › Laci kamar tidur</li>
+                  <li>· Rumah › Rak garasi</li>
+                  <li>· Kantor › Meja kerja</li>
                 </ul>
-                <Button size="sm" onClick={() => setCreateOpen(true)} iconLeft={<Plus size={14} />}>
-                  Add your first location
+                <Button
+                  className="min-h-11 self-start text-lg"
+                  onClick={() => setCreateOpen(true)}
+                  iconLeft={<Plus size={14} aria-hidden="true" />}
+                >
+                  Tambah lokasi pertama
                 </Button>
               </div>
             )}
 
             {!locationsState.loading && locations.length > 0 && (
               <>
-                <ul className="flex flex-col" role="tree" aria-label="Locations">
+                <ul className="flex flex-col" role="tree" aria-label="Daftar lokasi">
                   {tree.map((node) => (
                     <TreeRow
                       key={node.location.id}
@@ -255,11 +260,11 @@ function LocationsView() {
                   type="button"
                   onClick={() => setExpandAll((value) => !value)}
                   className={cx(
-                    "mt-3 text-dense font-medium text-primary underline-offset-4 hover:underline",
+                    "mt-3 min-h-11 text-base font-medium text-primary underline-offset-4 hover:underline",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm",
                   )}
                 >
-                  {expandAll ? "Collapse all" : "Expand all"}
+                  {expandAll ? "Tutup semua" : "Buka semua"}
                 </button>
               </>
             )}
@@ -273,54 +278,64 @@ function LocationsView() {
               <CardHeader>
                 <div className="min-w-0">
                   <CardTitle>{selected.name}</CardTitle>
-                  <p className="mt-0.5 truncate text-xs text-muted-foreground">{selected.path}</p>
+                  <p className="mt-0.5 truncate text-base text-muted-foreground">{selected.path}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  {selected.archivedAt && <Badge tone="muted"><Archive size={12} />Archived</Badge>}
-                  <Button variant="secondary" size="sm" onClick={() => setEditTarget(selected)} iconLeft={<Pencil size={14} />}>
-                    Edit
+                <div className="flex flex-wrap items-center gap-2">
+                  {selected.archivedAt && (
+                    <Badge tone="muted">
+                      <Archive size={12} aria-hidden="true" />
+                      Diarsipkan
+                    </Badge>
+                  )}
+                  <Button
+                    variant="secondary"
+                    className="min-h-11"
+                    onClick={() => setEditTarget(selected)}
+                    iconLeft={<Pencil size={14} aria-hidden="true" />}
+                  >
+                    Ubah
                   </Button>
                   {selected.archivedAt ? null : (
                     <Button
                       variant="secondary"
-                      size="sm"
+                      className="min-h-11"
                       onClick={() => {
                         setArchiveError(null);
                         setArchiveTarget(selected);
                       }}
-                      iconLeft={<Archive size={14} />}
+                      iconLeft={<Archive size={14} aria-hidden="true" />}
                     >
-                      Archive
+                      Arsipkan
                     </Button>
                   )}
                   <Button
                     variant="danger"
-                    size="sm"
+                    className="min-h-11"
                     onClick={() => {
                       setDeleteError(null);
                       setDeleteTarget(selected);
                     }}
-                    iconLeft={<Trash size={14} />}
+                    iconLeft={<Trash size={14} aria-hidden="true" />}
                   >
-                    Delete
+                    Hapus
                   </Button>
                 </div>
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
                 {selected.description && (
-                  <p className="text-dense text-foreground">{selected.description}</p>
+                  <p className="text-base text-foreground">{selected.description}</p>
                 )}
 
                 <section aria-labelledby="items-here-heading">
-                  <h3 id="items-here-heading" className="mb-2 text-dense font-semibold text-foreground">
-                    Items last recorded here
+                  <h3 id="items-here-heading" className="mb-2 text-base font-semibold text-foreground">
+                    Barang yang terakhir dicatat di sini
                   </h3>
                   {itemsState.loading && <Skeleton className="h-20 w-full" />}
                   {!itemsState.loading && itemsState.error && (
                     <ErrorState error={itemsState.error} onRetry={itemsState.reload} />
                   )}
                   {!itemsState.loading && !itemsState.error && itemsState.data && itemsState.data.items.length === 0 && (
-                    <p className="text-dense text-muted-foreground">Nothing recorded here yet.</p>
+                    <p className="text-base text-muted-foreground">Belum ada yang dicatat di sini.</p>
                   )}
                   {!itemsState.loading && !itemsState.error && itemsState.data && itemsState.data.items.length > 0 && (
                     <ul className="divide-y divide-border">
@@ -329,13 +344,13 @@ function LocationsView() {
                           <Link
                             href={`/inventory/${item.id}`}
                             className={cx(
-                              "flex items-center justify-between rounded-md px-1 py-2 text-dense hover:bg-muted/50",
+                              "flex min-h-11 items-center justify-between gap-2 rounded-md px-2 py-2 text-base hover:bg-muted/50",
                               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                             )}
                           >
                             <span className="font-medium text-foreground">{item.name}</span>
                             {item.lastLocation && (
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-sm text-muted-foreground">
                                 {item.lastLocation.name}
                               </span>
                             )}
@@ -351,8 +366,8 @@ function LocationsView() {
             <CardContent>
               <EmptyState
                 icon={<MapPin size={32} />}
-                title="Select a location"
-                description="Pick a location from the tree to see its details and the items last recorded there."
+                title="Pilih sebuah lokasi"
+                description="Pilih lokasi pada daftar untuk melihat detailnya dan barang yang terakhir dicatat di sini."
               />
             </CardContent>
           )}
@@ -367,7 +382,7 @@ function LocationsView() {
         onSaved={(created) => {
           locationsState.reload();
           select(created.id);
-          toast({ title: "Location created", description: created.path, tone: "success" });
+          toast({ title: "Lokasi ditambahkan", description: created.path, tone: "success" });
         }}
       />
 
@@ -379,32 +394,32 @@ function LocationsView() {
         onSaved={(updated) => {
           locationsState.reload();
           select(updated.id);
-          toast({ title: "Location updated", tone: "success" });
+          toast({ title: "Lokasi diperbarui", tone: "success" });
         }}
       />
 
       <Dialog
         open={archiveTarget !== null}
         onClose={() => setArchiveTarget(null)}
-        title="Archive this location?"
+        title="Arsipkan lokasi ini?"
         description={
           archiveTarget
-            ? `“${archiveTarget.name}” will be hidden from pickers. Past events keep their history.`
+            ? `“${archiveTarget.name}” akan disembunyikan dari pilihan. Catatan lama tetap tersimpan.`
             : undefined
         }
         footer={
           <>
-            <Button variant="secondary" onClick={() => setArchiveTarget(null)} disabled={archiveBusy}>
-              Cancel
+            <Button variant="secondary" className="min-h-11 text-lg" onClick={() => setArchiveTarget(null)} disabled={archiveBusy}>
+              Batal
             </Button>
-            <Button loading={archiveBusy} onClick={() => void doArchive()}>
-              Archive
+            <Button className="min-h-11 text-lg" loading={archiveBusy} onClick={() => void doArchive()}>
+              Arsipkan
             </Button>
           </>
         }
       >
         {archiveError && (
-          <p role="alert" className="rounded-md border border-destructive/40 bg-danger-surface p-3 text-dense text-destructive">
+          <p role="alert" className="rounded-md border border-destructive/40 bg-danger-surface p-3 text-base text-destructive">
             {archiveError}
           </p>
         )}
@@ -413,25 +428,25 @@ function LocationsView() {
       <Dialog
         open={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
-        title="Delete this location?"
+        title="Hapus lokasi ini?"
         description={
           deleteTarget
-            ? `“${deleteTarget.name}” will be permanently removed. This cannot be undone.`
+            ? `“${deleteTarget.name}” akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.`
             : undefined
         }
         footer={
           <>
-            <Button variant="secondary" onClick={() => setDeleteTarget(null)} disabled={deleteBusy}>
-              Cancel
+            <Button variant="secondary" className="min-h-11 text-lg" onClick={() => setDeleteTarget(null)} disabled={deleteBusy}>
+              Batal
             </Button>
-            <Button variant="danger" loading={deleteBusy} onClick={() => void doDelete()}>
-              Delete
+            <Button variant="danger" className="min-h-11 text-lg" loading={deleteBusy} onClick={() => void doDelete()}>
+              Hapus
             </Button>
           </>
         }
       >
         {deleteError && (
-          <p role="alert" className="rounded-md border border-destructive/40 bg-danger-surface p-3 text-dense text-destructive">
+          <p role="alert" className="rounded-md border border-destructive/40 bg-danger-surface p-3 text-base text-destructive">
             {deleteError}
           </p>
         )}
@@ -460,7 +475,7 @@ function TreeRow({
         type="button"
         onClick={() => onSelect(node.location.id)}
         className={cx(
-          "flex w-full items-center gap-1 rounded-md px-2 py-1.5 text-left text-dense",
+          "flex min-h-11 w-full items-center gap-2 rounded-md px-2 py-2 text-left text-base",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
           isSelected ? "bg-accent font-semibold text-accent-foreground" : "text-foreground hover:bg-muted/60",
         )}
@@ -479,8 +494,8 @@ function TreeRow({
         <span className="truncate">{node.location.name}</span>
         {node.location.archivedAt && (
           <Badge tone="muted" className="ml-1">
-            <Archive size={10} />
-            Archived
+            <Archive size={10} aria-hidden="true" />
+            Diarsipkan
           </Badge>
         )}
       </button>
@@ -557,7 +572,7 @@ function LocationFormDialog({
         return;
       }
       if (apiError.code === "CONFLICT") {
-        setError("name", { message: "That name is already used at this level." });
+        setError("name", { message: "Nama itu sudah dipakai pada tingkat ini." });
         return;
       }
       setFormError(apiError.message);
@@ -568,64 +583,66 @@ function LocationFormDialog({
     <Dialog
       open={open}
       onClose={onClose}
-      title="New location"
+      title="Lokasi baru"
       description={
         parent
-          ? `Creating under “${parent.path}”. Locations nest at most ${MAX_DEPTH} levels deep.`
-          : `Locations nest at most ${MAX_DEPTH} levels deep.`
+          ? `Dibuat di bawah “${parent.path}”. Lokasi bisa bersarang paling dalam ${MAX_DEPTH} tingkat.`
+          : `Lokasi bisa bersarang paling dalam ${MAX_DEPTH} tingkat.`
       }
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
-            Cancel
+          <Button variant="secondary" className="min-h-11 text-lg" onClick={onClose} disabled={isSubmitting}>
+            Batal
           </Button>
-          <Button type="submit" form="create-location-form" loading={isSubmitting}>
-            Create
+          <Button type="submit" form="create-location-form" className="min-h-11 text-lg" loading={isSubmitting}>
+            Tambah
           </Button>
         </>
       }
     >
       <form id="create-location-form" onSubmit={handleSubmit(submit)} noValidate className="flex flex-col gap-4">
         {formError && (
-          <p role="alert" className="rounded-md border border-destructive/40 bg-danger-surface p-3 text-dense text-destructive">
+          <p role="alert" className="rounded-md border border-destructive/40 bg-danger-surface p-3 text-base text-destructive">
             {formError}
           </p>
         )}
         <Input
-          label="Name"
-          placeholder="e.g. Garage shelf"
+          label="Nama"
+          placeholder="Contoh: Rak garasi"
           maxLength={80}
           error={errors.name?.message}
           aria-invalid={errors.name ? true : undefined}
+          className="min-h-12 text-lg"
           {...register("name")}
         />
         <Input
-          label="Description (optional)"
+          label="Deskripsi (opsional)"
           maxLength={2000}
+          className="min-h-12 text-lg"
           {...register("description")}
         />
         <div>
-          <label htmlFor="create-location-parent" className="text-dense font-medium text-foreground">
-            Parent location (optional)
+          <label htmlFor="create-location-parent" className="text-base font-medium text-foreground">
+            Lokasi induk (opsional)
           </label>
           <select
             id="create-location-parent"
             value={parentValue}
             onChange={(event) => setValue("parentId", event.target.value || null, { shouldDirty: true })}
             className={cx(
-              "mt-1.5 h-9 w-full appearance-none rounded-md border border-input bg-card px-3 text-base text-foreground",
+              "mt-1.5 min-h-12 w-full appearance-none rounded-md border border-input bg-card px-3 text-lg text-foreground",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             )}
           >
-            <option value="">Top level (no parent)</option>
+            <option value="">Tingkat teratas (tanpa induk)</option>
             {parentOptions.map((location) => (
               <option key={location.id} value={location.id}>
                 {location.path}
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Only parents that keep this location within {MAX_DEPTH} levels are listed.
+          <p className="mt-1 text-base text-muted-foreground">
+            Hanya lokasi induk yang tetap membuat lokasi ini berada dalam {MAX_DEPTH} tingkat.
           </p>
         </div>
       </form>
@@ -714,7 +731,7 @@ function LocationEditDialog({
         return;
       }
       if (apiError.code === "CONFLICT") {
-        setError("name", { message: "That name is already used at this level." });
+        setError("name", { message: "Nama itu sudah dipakai pada tingkat ini." });
         return;
       }
       setFormError(apiError.message);
@@ -725,55 +742,61 @@ function LocationEditDialog({
     <Dialog
       open={open}
       onClose={onClose}
-      title="Edit location"
-      description="Renaming never rewrites past events — they keep the path recorded at the time."
+      title="Ubah lokasi"
+      description="Mengganti nama tidak mengubah catatan lama — catatan tetap menyimpan jalur seperti saat dicatat."
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
-            Cancel
+          <Button variant="secondary" className="min-h-11 text-lg" onClick={onClose} disabled={isSubmitting}>
+            Batal
           </Button>
-          <Button type="submit" form="edit-location-form" loading={isSubmitting}>
-            Save
+          <Button type="submit" form="edit-location-form" className="min-h-11 text-lg" loading={isSubmitting}>
+            Simpan
           </Button>
         </>
       }
     >
       <form id="edit-location-form" onSubmit={handleSubmit(submit)} noValidate className="flex flex-col gap-4">
         {formError && (
-          <p role="alert" className="rounded-md border border-destructive/40 bg-danger-surface p-3 text-dense text-destructive">
+          <p role="alert" className="rounded-md border border-destructive/40 bg-danger-surface p-3 text-base text-destructive">
             {formError}
           </p>
         )}
         <Input
-          label="Name"
+          label="Nama"
           maxLength={80}
           error={errors.name?.message}
           aria-invalid={errors.name ? true : undefined}
+          className="min-h-12 text-lg"
           {...register("name")}
         />
-        <Input label="Description (optional)" maxLength={2000} {...register("description")} />
+        <Input
+          label="Deskripsi (opsional)"
+          maxLength={2000}
+          className="min-h-12 text-lg"
+          {...register("description")}
+        />
         <div>
-          <label htmlFor="edit-location-parent" className="text-dense font-medium text-foreground">
-            Parent location (optional)
+          <label htmlFor="edit-location-parent" className="text-base font-medium text-foreground">
+            Lokasi induk (opsional)
           </label>
           <select
             id="edit-location-parent"
             value={parentValue ?? ""}
             onChange={(event) => setValue("parentId", event.target.value || null, { shouldDirty: true })}
             className={cx(
-              "mt-1.5 h-9 w-full appearance-none rounded-md border border-input bg-card px-3 text-base text-foreground",
+              "mt-1.5 min-h-12 w-full appearance-none rounded-md border border-input bg-card px-3 text-lg text-foreground",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             )}
           >
-            <option value="">Top level (no parent)</option>
+            <option value="">Tingkat teratas (tanpa induk)</option>
             {parentOptions.map((candidate) => (
               <option key={candidate.id} value={candidate.id}>
                 {candidate.path}
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-muted-foreground">
-            This location and its own sub-locations can&apos;t become its parent.
+          <p className="mt-1 text-base text-muted-foreground">
+            Lokasi ini dan lokasi di bawahnya tidak boleh menjadi induknya sendiri.
           </p>
         </div>
       </form>

@@ -28,6 +28,8 @@ import { cx } from "@/lib/cx";
  * button behaves. Server-side filtering/sorting/pagination per API_SPEC §3.2.
  * TanStack Table and a DropdownMenu library are out of scope; the table and the
  * mobile card list are hand-built with the same semantics (§3.3).
+ * Copy is Bahasa Indonesia; touch targets ≥ 44 px (min-h-11/min-h-12) for the
+ * elderly family audience.
  */
 
 const PAGE_SIZES = [20, 50, 100] as const;
@@ -37,15 +39,15 @@ type SortOrder = "asc" | "desc";
 type StatusFilter = "active" | "archived" | "all";
 
 const SORTS: ReadonlyArray<{ value: SortKey; label: string }> = [
-  { value: "updatedAt", label: "Recently updated" },
-  { value: "lastRecordedAt", label: "Last recorded" },
-  { value: "name", label: "Name" },
+  { value: "updatedAt", label: "Terakhir diperbarui" },
+  { value: "lastRecordedAt", label: "Terakhir dicatat" },
+  { value: "name", label: "Nama (A–Z)" },
 ];
 
 const STATUSES: ReadonlyArray<{ value: StatusFilter; label: string }> = [
-  { value: "active", label: "Active" },
-  { value: "archived", label: "Archived" },
-  { value: "all", label: "All" },
+  { value: "active", label: "Aktif" },
+  { value: "archived", label: "Diarsipkan" },
+  { value: "all", label: "Semua" },
 ];
 
 function useDebouncedCallback(callback: (value: string) => void, delayMs = 300) {
@@ -74,7 +76,7 @@ function StatusBadge({ item }: { item: ItemDto }) {
     return (
       <Badge tone="muted">
         <Archive size={12} />
-        Archived
+        Diarsipkan
       </Badge>
     );
   }
@@ -82,14 +84,14 @@ function StatusBadge({ item }: { item: ItemDto }) {
     return (
       <Badge tone="success">
         <MapPin size={12} />
-        Recorded
+        Tercatat
       </Badge>
     );
   }
   return (
     <Badge tone="outline">
       <CircleDashed size={12} />
-      Never recorded
+      Belum dicatat
     </Badge>
   );
 }
@@ -105,15 +107,15 @@ export default function InventoryPage() {
 function InventorySkeleton() {
   return (
     <>
-      <PageHeader title="Inventory" />
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <div className="h-9 w-64 animate-pulse rounded-md bg-muted" aria-hidden="true" />
-        <div className="h-9 w-32 animate-pulse rounded-md bg-muted" aria-hidden="true" />
-        <div className="h-9 w-32 animate-pulse rounded-md bg-muted" aria-hidden="true" />
+      <PageHeader title="Barang" />
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="h-12 w-64 animate-pulse rounded-md bg-muted" aria-hidden="true" />
+        <div className="h-12 w-32 animate-pulse rounded-md bg-muted" aria-hidden="true" />
+        <div className="h-12 w-32 animate-pulse rounded-md bg-muted" aria-hidden="true" />
       </div>
       <SkeletonRows rows={10} />
       <span role="status" className="sr-only">
-        Loading inventory
+        Memuat daftar barang…
       </span>
     </>
   );
@@ -189,16 +191,16 @@ function InventoryView() {
       const updated = await api.items.archive(item.id);
       listState.reload();
       toast({
-        title: "Item archived",
-        description: `${item.name} is hidden from the active view.`,
+        title: "Barang diarsipkan",
+        description: `${item.name} disembunyikan dari daftar aktif.`,
         tone: "success",
         action: {
-          label: "Undo",
+          label: "Urungkan",
           onClick: () => {
             void api.items.unarchive(item.id).then(
               () => {
                 listState.reload();
-                toast({ title: "Restored", tone: "success" });
+                toast({ title: "Berhasil dipulihkan", tone: "success" });
               },
               (error: unknown) => {
                 toast({ title: toApiError(error).message, tone: "error" });
@@ -214,8 +216,8 @@ function InventoryView() {
         const items = apiError.numberExtra("referencedByItems");
         const events = apiError.numberExtra("referencedByEvents");
         toast({
-          title: "Can't archive yet",
-          description: `Still referenced by ${items ?? "some"} item(s) and ${events ?? "some"} event(s). Update those records first.`,
+          title: "Belum bisa diarsipkan",
+          description: `Masih dirujuk oleh ${items ?? "beberapa"} barang dan ${events ?? "beberapa"} catatan. Perbarui catatan tersebut terlebih dahulu.`,
           tone: "error",
         });
         return;
@@ -228,7 +230,7 @@ function InventoryView() {
     try {
       await api.items.unarchive(item.id);
       listState.reload();
-      toast({ title: "Item restored to active", tone: "success" });
+      toast({ title: "Barang dikembalikan ke daftar aktif", tone: "success" });
     } catch (error) {
       toast({ title: toApiError(error).message, tone: "error" });
     }
@@ -243,8 +245,8 @@ function InventoryView() {
       setPendingDelete(null);
       listState.reload();
       toast({
-        title: "Item deleted",
-        description: `${pendingDelete.name} can be restored for 30 days.`,
+        title: "Barang dihapus",
+        description: `${pendingDelete.name} bisa dipulihkan selama 30 hari.`,
         tone: "success",
       });
     } catch (error) {
@@ -260,44 +262,45 @@ function InventoryView() {
   return (
     <>
       <PageHeader
-        title="Inventory"
-        subtitle="Everything you track, with where you last left it."
+        title="Barang"
+        subtitle="Semua barang yang Anda catat, lengkap dengan tempat terakhir disimpan."
         actions={
           <Link
             href="/inventory/new"
             className={cx(
-              "inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-base font-medium text-primary-foreground hover:bg-primary-hover",
+              "inline-flex min-h-11 items-center gap-2 rounded-md bg-primary px-4 text-lg font-medium text-primary-foreground hover:bg-primary-hover",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             )}
           >
-            <Plus size={16} />
-            Add item
+            <Plus size={16} aria-hidden="true" />
+            Tambah barang
           </Link>
         }
       />
 
       {/* Toolbar */}
-      <div className="mb-4 flex flex-col gap-3 rounded-lg border border-border bg-card p-3 shadow-subtle">
-        <form role="search" onSubmit={onSearchSubmit} className="flex items-center gap-2">
+      <div className="mb-5 flex flex-col gap-4 rounded-lg border border-border bg-card p-4 shadow-subtle">
+        <form role="search" onSubmit={onSearchSubmit} className="flex items-center gap-3">
           <div className="relative min-w-0 flex-1">
             <SearchIcon
               size={16}
+              aria-hidden="true"
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             />
             <Input
               type="search"
-              aria-label="Search inventory"
-              placeholder="Search by name, category, or note…"
+              aria-label="Cari barang"
+              placeholder="Cari nama, kategori, atau catatan…"
               value={searchText}
               onChange={(event) => {
                 setSearchText(event.target.value);
                 debouncedSearch(event.target.value);
               }}
-              className="pl-9"
+              className="min-h-12 pl-9 text-lg"
             />
           </div>
-          <Button type="submit" variant="secondary">
-            Search
+          <Button type="submit" variant="secondary" className="min-h-11 text-lg">
+            Cari
           </Button>
         </form>
 
@@ -307,6 +310,7 @@ function InventoryView() {
               label="Status"
               value={status}
               onChange={(event) => setParams({ status: event.target.value })}
+              className="min-h-12"
             >
               {STATUSES.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -317,11 +321,12 @@ function InventoryView() {
           </div>
           <div className="w-48">
             <Select
-              label="Category"
+              label="Kategori"
               value={category}
               onChange={(event) => setParams({ category: event.target.value })}
+              className="min-h-12"
             >
-              <option value="">All categories</option>
+              <option value="">Semua kategori</option>
               {categoryOptions.map((option) => (
                 <option key={option} value={option}>
                   {option}
@@ -331,11 +336,12 @@ function InventoryView() {
           </div>
           <div className="w-52">
             <Select
-              label="Location"
+              label="Lokasi"
               value={locationId}
               onChange={(event) => setParams({ locationId: event.target.value })}
+              className="min-h-12"
             >
-              <option value="">All locations</option>
+              <option value="">Semua lokasi</option>
               {(locationsState.data?.locations ?? [])
                 .filter((location) => !location.archivedAt)
                 .sort((a, b) => a.path.localeCompare(b.path))
@@ -348,9 +354,10 @@ function InventoryView() {
           </div>
           <div className="w-48">
             <Select
-              label="Sort by"
+              label="Urutkan"
               value={sort}
               onChange={(event) => setParams({ sort: event.target.value })}
+              className="min-h-12"
             >
               {SORTS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -359,31 +366,32 @@ function InventoryView() {
               ))}
             </Select>
           </div>
-          <div className="w-32">
+          <div className="w-36">
             <Select
-              label="Order"
+              label="Urutan"
               value={order}
               onChange={(event) => setParams({ order: event.target.value })}
+              className="min-h-12"
             >
-              <option value="desc">Newest first</option>
-              <option value="asc">Oldest first</option>
+              <option value="desc">Terbaru dulu</option>
+              <option value="asc">Terlama dulu</option>
             </Select>
           </div>
           {hasFilters && (
             <Button
               variant="ghost"
               onClick={() => router.replace("/inventory", { scroll: false })}
-              className="mb-0.5"
+              className="min-h-11"
             >
-              Clear all
+              Hapus semua filter
             </Button>
           )}
         </div>
 
         {pagination && !listState.loading && !listState.error && (
-          <p className="text-dense text-muted-foreground" aria-live="polite">
-            {pagination.total} item{pagination.total === 1 ? "" : "s"}
-            {hasFilters ? " matching your filters" : ""}
+          <p className="text-base text-muted-foreground" aria-live="polite">
+            {pagination.total} barang
+            {hasFilters ? " sesuai filter Anda" : ""}
           </p>
         )}
       </div>
@@ -396,27 +404,31 @@ function InventoryView() {
         <EmptyState
           headingLevel={2}
           icon={<Box size={32} />}
-          title={hasFilters ? "No items match your filters" : "No items yet"}
+          title={hasFilters ? "Tidak ada barang yang cocok" : "Belum ada barang"}
           description={
             hasFilters
-              ? "Try a different search term, or clear the filters to see everything."
-              : "Add your first item to start tracking where you leave things."
+              ? "Coba kata kunci lain, atau hapus filter untuk melihat semua barang."
+              : "Tambahkan barang pertama untuk mulai mencatat di mana Anda menyimpannya."
           }
           action={
             hasFilters ? (
-              <Button variant="secondary" onClick={() => router.replace("/inventory", { scroll: false })}>
-                Clear filters
+              <Button
+                variant="secondary"
+                className="min-h-11 text-lg"
+                onClick={() => router.replace("/inventory", { scroll: false })}
+              >
+                Hapus filter
               </Button>
             ) : (
               <Link
                 href="/inventory/new"
                 className={cx(
-                  "inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-base font-medium text-primary-foreground hover:bg-primary-hover",
+                  "inline-flex min-h-11 items-center gap-2 rounded-md bg-primary px-4 text-lg font-medium text-primary-foreground hover:bg-primary-hover",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 )}
               >
-                <Plus size={16} />
-                Add your first item
+                <Plus size={16} aria-hidden="true" />
+                Tambah barang pertama
               </Link>
             )
           }
@@ -427,16 +439,18 @@ function InventoryView() {
         <>
           {/* Desktop table (≥ 768 px) */}
           <div className="hidden overflow-hidden rounded-lg border border-border bg-card shadow-subtle md:block">
-            <table className="w-full border-collapse text-dense">
-              <caption className="sr-only">Your inventory, with last recorded location and status</caption>
+            <table className="w-full border-collapse text-base">
+              <caption className="sr-only">
+                Daftar barang Anda, dengan lokasi terakhir tercatat dan statusnya
+              </caption>
               <thead>
                 <tr className="border-b border-border bg-muted/50 text-left">
-                  <th scope="col" className="px-4 py-2.5 font-semibold text-foreground">Item</th>
-                  <th scope="col" className="w-40 px-4 py-2.5 font-semibold text-foreground">Category</th>
-                  <th scope="col" className="w-60 px-4 py-2.5 font-semibold text-foreground">Last recorded</th>
-                  <th scope="col" className="w-40 px-4 py-2.5 font-semibold text-foreground">Status</th>
-                  <th scope="col" className="w-56 px-4 py-2.5 text-right font-semibold text-foreground">
-                    <span className="sr-only">Actions</span>
+                  <th scope="col" className="px-4 py-3 font-semibold text-foreground">Barang</th>
+                  <th scope="col" className="w-40 px-4 py-3 font-semibold text-foreground">Kategori</th>
+                  <th scope="col" className="w-60 px-4 py-3 font-semibold text-foreground">Terakhir dicatat</th>
+                  <th scope="col" className="w-40 px-4 py-3 font-semibold text-foreground">Status</th>
+                  <th scope="col" className="px-4 py-3 text-right font-semibold text-foreground">
+                    <span className="sr-only">Aksi</span>
                   </th>
                 </tr>
               </thead>
@@ -460,7 +474,7 @@ function InventoryView() {
                       ) : (
                         <>
                           <span aria-hidden="true">—</span>
-                          <span className="sr-only">No category</span>
+                          <span className="sr-only">Tanpa kategori</span>
                         </>
                       )}
                     </td>
@@ -473,45 +487,57 @@ function InventoryView() {
                           <time
                             dateTime={toDateTimeAttr(item.lastLocation.occurredAt)}
                             title={formatDateTime(item.lastLocation.occurredAt)}
-                            className="text-xs text-muted-foreground"
+                            className="text-sm text-muted-foreground"
                           >
                             {formatRelativeTime(item.lastLocation.occurredAt)}
                           </time>
                         </>
                       ) : (
-                        <span className="text-muted-foreground">Never recorded</span>
+                        <span className="text-muted-foreground">Belum pernah dicatat</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge item={item} />
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => router.push(`/inventory/${item.id}/edit`)}>
-                          <Pencil size={14} />
-                          <span className="sr-only">Edit {item.name}</span>
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          onClick={() => router.push(`/inventory/${item.id}/edit`)}
+                          className="min-h-11"
+                          iconLeft={<Pencil size={16} aria-hidden="true" />}
+                        >
+                          Ubah
                         </Button>
                         {item.archivedAt ? (
-                          <Button variant="ghost" size="sm" onClick={() => void unarchiveItem(item)}>
-                            <RotateCcw size={14} />
-                            <span className="sr-only">Restore {item.name}</span>
+                          <Button
+                            variant="ghost"
+                            onClick={() => void unarchiveItem(item)}
+                            className="min-h-11"
+                            iconLeft={<RotateCcw size={16} aria-hidden="true" />}
+                          >
+                            Pulihkan
                           </Button>
                         ) : (
-                          <Button variant="ghost" size="sm" onClick={() => void archiveItem(item)}>
-                            <Archive size={14} />
-                            <span className="sr-only">Archive {item.name}</span>
+                          <Button
+                            variant="ghost"
+                            onClick={() => void archiveItem(item)}
+                            className="min-h-11"
+                            iconLeft={<Archive size={16} aria-hidden="true" />}
+                          >
+                            Arsipkan
                           </Button>
                         )}
                         <Button
                           variant="ghost"
-                          size="sm"
                           onClick={() => {
                             setDeleteError(null);
                             setPendingDelete(item);
                           }}
+                          className="min-h-11"
+                          iconLeft={<Trash size={16} aria-hidden="true" />}
                         >
-                          <Trash size={14} />
-                          <span className="sr-only">Delete {item.name}</span>
+                          Hapus
                         </Button>
                       </div>
                     </td>
@@ -522,14 +548,14 @@ function InventoryView() {
           </div>
 
           {/* Mobile card list (< 768 px) */}
-          <ul className="flex flex-col gap-2 md:hidden">
+          <ul className="flex flex-col gap-3 md:hidden">
             {items.map((item) => (
-              <li key={item.id} className="rounded-lg border border-border bg-card p-3 shadow-subtle">
+              <li key={item.id} className="rounded-lg border border-border bg-card p-4 shadow-subtle">
                 <div className="flex items-start justify-between gap-2">
                   <Link
                     href={`/inventory/${item.id}`}
                     className={cx(
-                      "min-w-0 flex-1 text-base font-medium text-foreground underline-offset-4 hover:underline",
+                      "min-w-0 flex-1 text-lg font-medium text-foreground underline-offset-4 hover:underline",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm",
                     )}
                   >
@@ -537,13 +563,13 @@ function InventoryView() {
                   </Link>
                   <StatusBadge item={item} />
                 </div>
-                <dl className="mt-2 space-y-1 text-dense">
-                  <div className="flex gap-2">
-                    <dt className="w-24 shrink-0 text-muted-foreground">Category</dt>
+                <dl className="mt-3 space-y-1.5 text-base">
+                  <div className="flex gap-3">
+                    <dt className="w-28 shrink-0 font-medium text-muted-foreground">Kategori</dt>
                     <dd className="text-foreground">{item.category || "—"}</dd>
                   </div>
-                  <div className="flex gap-2">
-                    <dt className="w-24 shrink-0 text-muted-foreground">Last recorded</dt>
+                  <div className="flex gap-3">
+                    <dt className="w-28 shrink-0 font-medium text-muted-foreground">Terakhir dicatat</dt>
                     <dd className="text-foreground">
                       {item.lastLocation ? (
                         <>
@@ -551,39 +577,43 @@ function InventoryView() {
                           <time
                             dateTime={toDateTimeAttr(item.lastLocation.occurredAt)}
                             title={formatDateTime(item.lastLocation.occurredAt)}
-                            className="text-xs text-muted-foreground"
+                            className="text-sm text-muted-foreground"
                           >
                             {formatRelativeTime(item.lastLocation.occurredAt)}
                           </time>
                         </>
                       ) : (
-                        "Never recorded"
+                        "Belum pernah dicatat"
                       )}
                     </dd>
                   </div>
                 </dl>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Button variant="secondary" size="sm" onClick={() => router.push(`/inventory/${item.id}/edit`)}>
-                    Edit
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Button
+                    variant="secondary"
+                    className="min-h-11 text-lg"
+                    onClick={() => router.push(`/inventory/${item.id}/edit`)}
+                  >
+                    Ubah
                   </Button>
                   {item.archivedAt ? (
-                    <Button variant="ghost" size="sm" onClick={() => void unarchiveItem(item)}>
-                      Restore
+                    <Button variant="ghost" className="min-h-11 text-lg" onClick={() => void unarchiveItem(item)}>
+                      Pulihkan
                     </Button>
                   ) : (
-                    <Button variant="ghost" size="sm" onClick={() => void archiveItem(item)}>
-                      Archive
+                    <Button variant="ghost" className="min-h-11 text-lg" onClick={() => void archiveItem(item)}>
+                      Arsipkan
                     </Button>
                   )}
                   <Button
                     variant="ghost"
-                    size="sm"
+                    className="min-h-11 text-lg"
                     onClick={() => {
                       setDeleteError(null);
                       setPendingDelete(item);
                     }}
                   >
-                    Delete
+                    Hapus
                   </Button>
                 </div>
               </li>
@@ -605,25 +635,25 @@ function InventoryView() {
       <Dialog
         open={pendingDelete !== null}
         onClose={() => setPendingDelete(null)}
-        title="Delete this item?"
+        title="Hapus barang ini?"
         description={
           pendingDelete
-            ? `“${pendingDelete.name}” will be removed from your active records. You can restore it for 30 days.`
+            ? `“${pendingDelete.name}” akan dihapus dari catatan aktif Anda. Barang bisa dipulihkan selama 30 hari.`
             : undefined
         }
         footer={
           <>
-            <Button variant="secondary" onClick={() => setPendingDelete(null)} disabled={deleteBusy}>
-              Cancel
+            <Button variant="secondary" className="min-h-11 text-lg" onClick={() => setPendingDelete(null)} disabled={deleteBusy}>
+              Batal
             </Button>
-            <Button variant="danger" loading={deleteBusy} onClick={() => void confirmDelete()}>
-              Delete
+            <Button variant="danger" className="min-h-11 text-lg" loading={deleteBusy} onClick={() => void confirmDelete()}>
+              Hapus
             </Button>
           </>
         }
       >
         {deleteError && (
-          <p role="alert" className="rounded-md border border-destructive/40 bg-danger-surface p-3 text-dense text-destructive">
+          <p role="alert" className="rounded-md border border-destructive/40 bg-danger-surface p-3 text-base text-destructive">
             {deleteError}
           </p>
         )}

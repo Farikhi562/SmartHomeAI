@@ -354,7 +354,7 @@ server-side mechanics are referenced, not re-specified. Status codes come from
 
 **Main flow (export):**
 1. User requests export (optionally including conversations; default excludes content).
-2. System streams a JSON file of the authenticated owner's records only (items, aliases, locations, events, preferences) — ≤ 10 MB, else paginated export.
+2. System streams a JSON file of the authenticated owner's records only (`{ items, locations, events, preferences, exportedAt }`; conversations excluded by default) — ≤ 10 MB, else paginated export.
 3. Audit event `DATA_EXPORTED` recorded.
 
 **Main flow (delete account):**

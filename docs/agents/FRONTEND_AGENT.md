@@ -25,7 +25,7 @@ logic in components** — rules live server-side.
 - `src/client/**` — typed fetch wrappers, React Query hooks, UI state.
 - Frontend tasks: T-010, T-011, T-013, T-014, T-025, T-031, T-033, T-035, T-041, T-043, T-044,
   T-055, T-057; joint: T-015 (with Backend), T-036 (with Backend); P1: T-080, T-082, T-083, T-084,
-  T-085, T-086.
+  T-085, T-086, T-089 (joint, export UI trigger), T-090, T-091.
 - UI test additions in `tests/**` **with QA coordination** (§5).
 
 **Out of scope**

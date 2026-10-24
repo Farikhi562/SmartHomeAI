@@ -13,24 +13,24 @@ import { Input } from "@/components/ui/Input";
 import { Spinner } from "@/components/ui/Spinner";
 import { AlertTriangle, List } from "@/components/ui/icons";
 import { devLoginSchema } from "@/lib/validation";
-import { cx } from "@/lib/cx";
 
 /**
  * Sign-in (DESIGN_SPEC §2.1). The form follows GET /api/auth/config:
  *  - "dev": email only (any email signs in locally — D5 dev path);
  *  - "supabase": email + password, with an optional sign-up form (AC-001-4).
+ * Sign-up is offered as a full-width button (never a small text link).
  */
 
 const passwordLoginSchema = z.object({
-  email: z.string().trim().email("Enter a valid email address.").max(320),
-  password: z.string().min(1, "Enter your password.").max(128),
+  email: z.string().trim().email("Masukkan alamat email yang valid.").max(320),
+  password: z.string().min(1, "Masukkan kata sandi Anda.").max(128),
 });
 
 const signupSchema = z.object({
-  email: z.string().trim().email("Enter a valid email address.").max(320),
+  email: z.string().trim().email("Masukkan alamat email yang valid.").max(320),
   password: z
     .string()
-    .min(8, "Use at least 8 characters.")
+    .min(8, "Gunakan minimal 8 karakter.")
     .max(128),
 });
 
@@ -51,7 +51,7 @@ function FormError({ message }: { message: string | null }) {
       role="alert"
       className="flex items-start gap-2 rounded-md border border-destructive/40 bg-danger-surface p-3 text-dense text-destructive"
     >
-      <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+      <AlertTriangle size={18} className="mt-0.5 shrink-0" />
       <span>{message}</span>
     </div>
   );
@@ -68,6 +68,14 @@ function SignInForm() {
   const next = safeNext(searchParams.get("next"));
   const authMode = config.data?.mode ?? "dev";
   const signupEnabled = config.data?.signupEnabled ?? false;
+  const googleError =
+    searchParams.get("error") === "google_not_configured"
+      ? "Login Google belum dikonfigurasi di Supabase."
+      : searchParams.get("error") === "google_session_expired"
+        ? "Sesi login Google kedaluwarsa. Coba lagi."
+        : searchParams.get("error")
+          ? "Login Google gagal. Coba lagi."
+          : null;
 
   const devForm = useForm<DevForm>({
     resolver: zodResolver(devLoginSchema),
@@ -104,7 +112,7 @@ function SignInForm() {
       return;
     }
     if (apiError.code === "RATE_LIMITED" && apiError.retryAfterSec !== undefined) {
-      setFormError(`Too many attempts — try again in ${apiError.retryAfterSec}s.`);
+      setFormError(`Terlalu banyak percobaan. Coba lagi dalam ${apiError.retryAfterSec} detik.`);
       return;
     }
     setFormError(apiError.message);
@@ -144,39 +152,55 @@ function SignInForm() {
         return;
       }
       setMode("signin");
-      setSignupNotice("Check your inbox to confirm your email, then sign in.");
+      setSignupNotice("Pendaftaran berhasil. Cek kotak masuk atau folder spam untuk konfirmasi email, lalu masuk.");
     } catch (error) {
       handleAuthError(error, ["password", "email"]);
     }
   };
 
+  const switchToSignup = () => {
+    setMode("signup");
+    setFormError(null);
+    setSignupNotice(null);
+  };
+
+  const switchToSignin = () => {
+    setMode("signin");
+    setFormError(null);
+    setSignupNotice(null);
+  };
+
   if (config.loading) {
     return (
-      <div className="flex w-full max-w-[400px] items-center justify-center py-24" role="status">
+      <div className="flex w-full max-w-[400px] items-center justify-center gap-3 py-24" role="status">
         <Spinner className="size-6 text-muted-foreground" />
-        <span className="sr-only">Loading sign-in options</span>
+        <span className="text-base text-muted-foreground">Memuat…</span>
       </div>
     );
   }
 
   return (
     <div className="w-full max-w-[400px]">
-      <div className="mb-6 flex items-center gap-2">
+      <div className="mb-6 flex items-center gap-2.5">
         <span
           aria-hidden="true"
-          className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground"
+          className="flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground"
         >
-          <List size={16} />
+          <List size={18} />
         </span>
-        <span className="text-base font-semibold">SmartHomeAI</span>
+        <span className="text-lg font-semibold">SmartHomeAI</span>
       </div>
 
-      <h1 className="text-2xl font-bold text-foreground">{mode === "signup" ? "Create your account" : "Sign in"}</h1>
-      <p className="mt-1 text-base text-muted-foreground">
+      <h1 className="text-2xl font-bold text-foreground">{mode === "signup" ? "Buat akun" : "Masuk"}</h1>
+      <p className="mt-1 text-base text-foreground">
         {mode === "signup"
-          ? "Track where everything lives — and ask when you forget."
-          : "Open your inventory and ask where you left things."}
+          ? "Catat barang dan lokasi Anda, lalu tanyakan saat lupa menyimpannya."
+          : "Buka daftar barang Anda dan tanyakan di mana Anda meletakkannya."}
       </p>
+
+      <div className="mt-4">
+        <FormError message={googleError} />
+      </div>
 
       {/* Dev mode: email only. */}
       {authMode === "dev" && mode === "signin" && (
@@ -191,13 +215,13 @@ function SignInForm() {
             type="email"
             autoComplete="email"
             inputMode="email"
-            placeholder="you@example.com"
+            placeholder="nama@contoh.com"
             error={devForm.formState.errors.email?.message}
             aria-invalid={devForm.formState.errors.email ? true : undefined}
             {...devForm.register("email")}
           />
           <Button type="submit" loading={devForm.formState.isSubmitting} className="w-full">
-            Sign in
+            Masuk
           </Button>
           <Button
             type="button"
@@ -207,31 +231,43 @@ function SignInForm() {
               devForm.setValue("email", "demo@smarthomeai.local", { shouldDirty: true, shouldValidate: false })
             }
           >
-            Continue as demo
+            Masuk sebagai demo
           </Button>
         </form>
       )}
 
       {/* Supabase mode: email + password (sign in or sign up). */}
       {authMode === "supabase" && mode === "signin" && (
-        <form
-          onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
-          noValidate
-          className="mt-6 flex flex-col gap-4 rounded-lg border border-border bg-card p-6 shadow-subtle"
-        >
-          <FormError message={formError ?? signupNotice} />
+        <div className="mt-6 flex flex-col gap-4 rounded-lg border border-border bg-card p-6 shadow-subtle">
+          <Button
+            type="button"
+            variant="secondary"
+            className="w-full"
+            onClick={() => {
+              window.location.assign(`/api/auth/google/start?next=${encodeURIComponent(next)}`);
+            }}
+          >
+            Lanjutkan dengan Google
+          </Button>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="h-px flex-1 bg-border" />
+            <span>atau dengan email</span>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+          <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} noValidate className="flex flex-col gap-4">
+            <FormError message={formError ?? signupNotice} />
           <Input
             label="Email"
             type="email"
             autoComplete="email"
             inputMode="email"
-            placeholder="you@example.com"
+            placeholder="nama@contoh.com"
             error={passwordForm.formState.errors.email?.message}
             aria-invalid={passwordForm.formState.errors.email ? true : undefined}
             {...passwordForm.register("email")}
           />
           <Input
-            label="Password"
+            label="Kata sandi"
             type="password"
             autoComplete="current-password"
             error={passwordForm.formState.errors.password?.message}
@@ -239,9 +275,17 @@ function SignInForm() {
             {...passwordForm.register("password")}
           />
           <Button type="submit" loading={passwordForm.formState.isSubmitting} className="w-full">
-            Sign in
+            Masuk
           </Button>
-        </form>
+          </form>
+        </div>
+      )}
+
+      {/* Primary sign-up entry point: a full-width button, never a tiny link. */}
+      {signupEnabled && mode === "signin" && (
+        <Button type="button" variant="secondary" className="mt-4 w-full" onClick={switchToSignup}>
+          Belum punya akun? Daftar
+        </Button>
       )}
 
       {authMode === "supabase" && mode === "signup" && (
@@ -256,72 +300,43 @@ function SignInForm() {
             type="email"
             autoComplete="email"
             inputMode="email"
-            placeholder="you@example.com"
+            placeholder="nama@contoh.com"
             error={signupForm.formState.errors.email?.message}
             aria-invalid={signupForm.formState.errors.email ? true : undefined}
             {...signupForm.register("email")}
           />
           <Input
-            label="Password"
+            label="Kata sandi"
             type="password"
             autoComplete="new-password"
-            hint="At least 8 characters."
+            hint="Minimal 8 karakter."
             error={signupForm.formState.errors.password?.message}
             aria-invalid={signupForm.formState.errors.password ? true : undefined}
             {...signupForm.register("password")}
           />
           <Button type="submit" loading={signupForm.formState.isSubmitting} className="w-full">
-            Create account
+            Daftar
           </Button>
         </form>
       )}
 
-      {signupEnabled && (
-        <p className="mt-4 text-center text-dense text-muted-foreground">
-          {mode === "signin" ? (
-            <button
-              type="button"
-              onClick={() => {
-                setMode("signup");
-                setFormError(null);
-                setSignupNotice(null);
-              }}
-              className={cx(
-                "text-primary underline-offset-4 hover:underline",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm",
-              )}
-            >
-              Create an account
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => {
-                setMode("signin");
-                setFormError(null);
-              }}
-              className={cx(
-                "text-primary underline-offset-4 hover:underline",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm",
-              )}
-            >
-              ← Back to sign in
-            </button>
-          )}
-        </p>
+      {signupEnabled && mode === "signup" && (
+        <Button type="button" variant="secondary" className="mt-4 w-full" onClick={switchToSignin}>
+          Sudah punya akun? Masuk
+        </Button>
       )}
 
-      <p className="mt-4 text-xs text-muted-foreground">
+      <p className="mt-5 text-dense text-muted-foreground">
         {authMode === "dev"
-          ? "Development mode: any email signs you in; production uses Amazon Cognito (D5)."
-          : "Sessions are held in a secure, httpOnly cookie."}
+          ? "Mode pengembangan: email apa pun bisa digunakan untuk masuk; versi produksi memakai Amazon Cognito (D5)."
+          : "Sesi disimpan di cookie httpOnly yang aman."}
       </p>
-      <p className="mt-3 text-xs">
+      <p className="mt-3 text-base">
         <Link
           href="/"
-          className="text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+          className="inline-flex min-h-11 items-center text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
         >
-          ← Back to home
+          Kembali ke beranda
         </Link>
       </p>
     </div>
@@ -331,10 +346,10 @@ function SignInForm() {
 function SignInFallback() {
   return (
     <div className="w-full max-w-[400px]">
-      <div className="h-8 w-40 animate-pulse rounded-md bg-muted" aria-hidden="true" />
+      <div className="h-9 w-44 animate-pulse rounded-md bg-muted" aria-hidden="true" />
       <div className="mt-4 h-24 w-full animate-pulse rounded-lg bg-muted" aria-hidden="true" />
       <span role="status" className="sr-only">
-        Loading sign-in form
+        Memuat formulir masuk
       </span>
     </div>
   );
@@ -344,15 +359,15 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <a href="#main" className="skip-link">
-        Skip to main content
+        Lewati ke konten utama
       </a>
       <main id="main" className="flex flex-1 items-center justify-center px-4 py-12">
         <Suspense fallback={<SignInFallback />}>
           <SignInForm />
         </Suspense>
       </main>
-      <footer className="px-4 pb-6 text-center text-xs text-muted-foreground">
-        SmartHomeAI — answers reflect your last recorded locations.
+      <footer className="px-4 pb-8 text-center text-dense text-muted-foreground">
+        SmartHomeAI — jawaban mengikuti lokasi yang terakhir Anda catat.
       </footer>
     </div>
   );

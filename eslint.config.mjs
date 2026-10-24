@@ -33,6 +33,11 @@ export default defineConfig([
     rules: { "no-console": "off" },
   },
   {
+    // Ad-hoc root-level debug scripts (console IS their output channel).
+    files: ["*.mjs"],
+    rules: { "no-console": "off" },
+  },
+  {
     ignores: [".next/**", "node_modules/**", "src/generated/**", "next-env.d.ts"],
   },
 ]);

@@ -22,10 +22,11 @@ import { cx } from "@/lib/cx";
  * Edit item (DESIGN_SPEC §1.8): identity fields only — editing never touches
  * location events (FR-002.3), and the form says so in helper text. Breadcrumbs
  * are required on this route (§5.3).
+ * Copy is Bahasa Indonesia; touch targets ≥ 44 px for the elderly audience.
  */
 
 const linkButtonBase =
-  "inline-flex h-9 items-center rounded-md px-4 text-base font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+  "inline-flex min-h-11 items-center rounded-md px-4 text-lg font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
 export default function EditItemPage() {
   const params = useParams<{ id: string }>();
@@ -37,22 +38,22 @@ export default function EditItemPage() {
     return (
       <>
         <PageHeader
-          title="Edit item"
+          title="Ubah barang"
           breadcrumbs={[
-            { label: "Inventory", href: "/inventory" },
-            { label: "Item", href: `/inventory/${itemId}` },
-            { label: "Edit" },
+            { label: "Barang", href: "/inventory" },
+            { label: "Barang", href: `/inventory/${itemId}` },
+            { label: "Ubah" },
           ]}
         />
         <div className="mx-auto max-w-[720px] rounded-lg border border-border bg-card p-6 shadow-subtle">
           <div className="flex flex-col gap-5" aria-hidden="true">
-            <div className="h-9 w-full animate-pulse rounded-md bg-muted" />
+            <div className="h-12 w-full animate-pulse rounded-md bg-muted" />
             <div className="h-24 w-full animate-pulse rounded-md bg-muted" />
-            <div className="h-9 w-2/3 animate-pulse rounded-md bg-muted" />
+            <div className="h-12 w-2/3 animate-pulse rounded-md bg-muted" />
           </div>
         </div>
         <span role="status" className="sr-only">
-          Loading item
+          Memuat barang…
         </span>
       </>
     );
@@ -63,24 +64,24 @@ export default function EditItemPage() {
     return (
       <>
         <PageHeader
-          title="Edit item"
+          title="Ubah barang"
           breadcrumbs={[
-            { label: "Inventory", href: "/inventory" },
-            { label: "Edit" },
+            { label: "Barang", href: "/inventory" },
+            { label: "Ubah" },
           ]}
         />
         {notFound ? (
           <EmptyState
             headingLevel={2}
             icon={<Box size={32} />}
-            title="We can't find that item"
-            description="It may have been deleted, or it isn't yours."
+            title="Barang tidak ditemukan"
+            description="Barangnya mungkin sudah dihapus, atau bukan milik Anda."
             action={
               <Link
                 href="/inventory"
                 className={`${linkButtonBase} bg-primary text-primary-foreground hover:bg-primary-hover`}
               >
-                Back to inventory
+                Kembali ke daftar barang
               </Link>
             }
           />
@@ -132,7 +133,7 @@ function EditForm({ item }: { item: ItemDto }) {
         description: values.description?.trim() || null,
         category: values.category?.trim() || null,
       });
-      toast({ title: "Item updated", tone: "success" });
+      toast({ title: "Perubahan disimpan", tone: "success" });
       router.push(`/inventory/${item.id}`);
       router.refresh();
     } catch (error) {
@@ -146,76 +147,77 @@ function EditForm({ item }: { item: ItemDto }) {
   return (
     <>
       <PageHeader
-        title="Edit item"
-        subtitle="Editing details never changes your location history."
+        title="Ubah barang"
+        subtitle="Mengubah detail ini tidak mengubah riwayat lokasi Anda."
         breadcrumbs={[
-          { label: "Inventory", href: "/inventory" },
+          { label: "Barang", href: "/inventory" },
           { label: item.name, href: `/inventory/${item.id}` },
-          { label: "Edit" },
+          { label: "Ubah" },
         ]}
       />
 
       <form
         onSubmit={handleSubmit(submit)}
         noValidate
-        className="mx-auto max-w-[720px] rounded-lg border border-border bg-card p-6 shadow-subtle"
+        className="mx-auto flex max-w-[720px] flex-col gap-5 rounded-lg border border-border bg-card p-6 shadow-subtle"
       >
         {formError && (
           <p
             role="alert"
-            className="mb-5 rounded-md border border-destructive/40 bg-danger-surface p-3 text-dense text-destructive"
+            className="rounded-md border border-destructive/40 bg-danger-surface p-3 text-base text-destructive"
           >
             {formError}
           </p>
         )}
 
-        <div className="flex flex-col gap-5">
-          <Input
-            label="Name"
-            maxLength={120}
-            error={errors.name?.message}
-            aria-invalid={errors.name ? true : undefined}
-            {...register("name")}
-          />
+        <Input
+          label="Nama"
+          maxLength={120}
+          error={errors.name?.message}
+          aria-invalid={errors.name ? true : undefined}
+          className="min-h-12 text-lg"
+          {...register("name")}
+        />
 
-          <Textarea
-            label="Description (optional)"
-            maxLength={2000}
-            hint="Anything that helps you identify it."
-            error={errors.description?.message}
-            {...register("description")}
-          />
+        <Textarea
+          label="Deskripsi (opsional)"
+          maxLength={2000}
+          hint="Apa pun yang membantu Anda mengenalinya nanti."
+          error={errors.description?.message}
+          className="text-lg"
+          {...register("description")}
+        />
 
-          <Input
-            label="Category (optional)"
-            maxLength={60}
-            hint="Lowercase free text."
-            error={errors.category?.message}
-            {...register("category")}
-          />
+        <Input
+          label="Kategori (opsional)"
+          maxLength={60}
+          hint="Tulis bebas dengan huruf kecil."
+          error={errors.category?.message}
+          className="min-h-12 text-lg"
+          {...register("category")}
+        />
 
-          <p className="text-xs text-muted-foreground">
-            Editing details never changes your location history — corrections there happen by
-            recording a new entry.
-          </p>
+        <p className="text-base text-muted-foreground">
+          Mengubah detail ini tidak mengubah riwayat lokasi — untuk mengoreksi riwayat, catatlah
+          lokasi baru.
+        </p>
 
-          <div className="flex items-center gap-2 border-t border-border pt-5">
-            <Button type="submit" loading={isSubmitting} disabled={!isDirty || isSubmitting}>
-              Save changes
-            </Button>
-            <Link
-              href={`/inventory/${item.id}`}
-              className={cx(
-                linkButtonBase,
-                "border border-border-strong bg-secondary text-secondary-foreground hover:bg-muted",
-              )}
-            >
-              Cancel
-            </Link>
-            {!isDirty && (
-              <p className="text-xs text-muted-foreground">Nothing changed yet.</p>
+        <div className="flex flex-wrap items-center gap-3 border-t border-border pt-5">
+          <Button type="submit" loading={isSubmitting} disabled={!isDirty || isSubmitting} className="min-h-12 text-lg">
+            Simpan perubahan
+          </Button>
+          <Link
+            href={`/inventory/${item.id}`}
+            className={cx(
+              linkButtonBase,
+              "border border-border-strong bg-secondary text-secondary-foreground hover:bg-muted",
             )}
-          </div>
+          >
+            Batal
+          </Link>
+          {!isDirty && (
+            <p className="text-base text-muted-foreground">Belum ada perubahan.</p>
+          )}
         </div>
       </form>
     </>

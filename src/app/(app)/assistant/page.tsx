@@ -27,12 +27,13 @@ import { cx } from "@/lib/cx";
  * Conversation selection uses `?c=<id>` rather than `/assistant/:id` (see the
  * deviations note): the assistant route stays a single page and the server
  * layer has no per-conversation page segment yet.
+ * Copy is Bahasa Indonesia; touch targets ≥ 44 px for the elderly audience.
  */
 
 const SUGGESTED_QUESTIONS = [
-  "Where did I last put my motorcycle keys?",
-  "What's in the bedroom drawer?",
-  "I put my wallet in the bedroom drawer",
+  "Di mana saya terakhir menyimpan kunci motor?",
+  "Isi apa yang ada di laci kamar tidur?",
+  "Saya menyimpan dompet di laci kamar tidur",
 ];
 
 type ThreadEntry =
@@ -51,14 +52,14 @@ export default function AssistantPage() {
 function AssistantSkeleton() {
   return (
     <>
-      <PageHeader title="Assistant" />
+      <PageHeader title="Asisten" />
       <div className="flex flex-col gap-3">
         <Skeleton className="h-20 w-2/3 self-end rounded-lg" />
         <Skeleton className="h-24 w-3/4 rounded-lg" />
         <Skeleton className="h-20 w-2/3 self-end rounded-lg" />
       </div>
       <span role="status" className="sr-only">
-        Loading assistant
+        Memuat asisten…
       </span>
     </>
   );
@@ -175,7 +176,7 @@ function AssistantView() {
           ]);
         } else if (apiError.code === "RATE_LIMITED") {
           setComposerError(
-            `The assistant is rate limited — try again in ${apiError.retryAfterSec ?? 60}s.`,
+            `Asisten sedang membatasi permintaan — coba lagi dalam ${apiError.retryAfterSec ?? 60} detik.`,
           );
           setDraft(trimmed);
         } else {
@@ -207,15 +208,15 @@ function AssistantView() {
       );
       if (decision === "confirm") {
         toast({
-          title: "Recorded",
-          description: result.event ? `Location saved for ${result.event.item?.name ?? "the item"}.` : undefined,
+          title: "Tercatat",
+          description: result.event ? `Lokasi tersimpan untuk ${result.event.item?.name ?? "barang ini"}.` : undefined,
           tone: "success",
         });
         if (result.item) {
-          toast({ title: "Item created", description: result.item.name, tone: "success" });
+          toast({ title: "Barang ditambahkan", description: result.item.name, tone: "success" });
         }
       } else {
-        toast({ title: "Cancelled — nothing was saved", tone: "info" });
+        toast({ title: "Dibatalkan — tidak ada yang disimpan", tone: "info" });
       }
       if (activeConversationId) historyState.reload();
     } catch (error) {
@@ -227,7 +228,7 @@ function AssistantView() {
             return { ...entry, reply: { ...entry.reply, status: "ERROR" } };
           }),
         );
-        toast({ title: "This proposal expired", description: "Ask again to get a fresh one.", tone: "error" });
+        toast({ title: "Usulan ini sudah kedaluwarsa", description: "Tanyakan lagi untuk mendapatkan usulan baru.", tone: "error" });
         return;
       }
       toast({ title: apiError.message, tone: "error" });
@@ -243,7 +244,7 @@ function AssistantView() {
       setEntries([]);
       navigateToConversation(null);
       conversationsState.reload();
-      toast({ title: "Conversation deleted", tone: "success" });
+      toast({ title: "Percakapan dihapus", tone: "success" });
     } catch (error) {
       toast({ title: toApiError(error).message, tone: "error" });
     } finally {
@@ -263,19 +264,19 @@ function AssistantView() {
   return (
     <>
       <PageHeader
-        title="Assistant"
-        subtitle="Ask in plain language — answers come only from your records."
+        title="Asisten"
+        subtitle="Tanya dengan bahasa sehari-hari — jawaban hanya dari catatan Anda sendiri."
         actions={
           <>
-            <Button variant="secondary" onClick={() => setListOpen(true)} className="lg:hidden">
-              History
+            <Button variant="secondary" className="min-h-11 text-lg lg:hidden" onClick={() => setListOpen(true)}>
+              Riwayat
             </Button>
-            <Button onClick={startNew} iconLeft={<Plus size={16} />}>
-              New conversation
+            <Button className="min-h-11 text-lg" onClick={startNew} iconLeft={<Plus size={16} aria-hidden="true" />}>
+              Percakapan baru
             </Button>
             {activeConversationId && (
-              <Button variant="danger" onClick={() => setDeleteOpen(true)} iconLeft={<Trash size={16} />}>
-                Delete
+              <Button variant="danger" className="min-h-11 text-lg" onClick={() => setDeleteOpen(true)} iconLeft={<Trash size={16} aria-hidden="true" />}>
+                Hapus
               </Button>
             )}
           </>
@@ -297,12 +298,12 @@ function AssistantView() {
         </aside>
 
         {listOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Conversations">
+          <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Daftar percakapan">
             <div className="absolute inset-0 bg-black/50" onMouseDown={() => setListOpen(false)} aria-hidden="true" />
             <div className="absolute inset-y-0 left-0 w-80 max-w-[85vw] bg-popover p-3 shadow-overlay">
               <div className="mb-2 flex justify-end">
-                <Button variant="ghost" size="sm" onClick={() => setListOpen(false)}>
-                  Close
+                <Button variant="ghost" className="min-h-11 text-lg" onClick={() => setListOpen(false)}>
+                  Tutup
                 </Button>
               </div>
               <ConversationList
@@ -330,14 +331,14 @@ function AssistantView() {
             ref={threadRef}
             className="flex-1 overflow-y-auto p-4"
             aria-live="polite"
-            aria-label="Conversation"
+            aria-label="Isi percakapan"
           >
             {historyState.loading && (
               <div className="flex flex-col gap-3">
                 <Skeleton className="h-16 w-2/3 self-end rounded-lg" />
                 <Skeleton className="h-20 w-3/4 rounded-lg" />
                 <span role="status" className="sr-only">
-                  Loading conversation
+                  Memuat percakapan…
                 </span>
               </div>
             )}
@@ -348,22 +349,22 @@ function AssistantView() {
 
             {isEmpty && !historyState.loading && (
               <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
-                <Sparkles size={32} className="text-muted-foreground" />
+                <Sparkles size={32} className="text-muted-foreground" aria-hidden="true" />
                 <div>
-                  <p className="text-base font-semibold text-foreground">Ask where you left something</p>
-                  <p className="mt-1 text-dense text-muted-foreground">
-                    I answer only from your recorded locations — and I&apos;ll cite the entries I use.
+                  <p className="text-lg font-semibold text-foreground">Tanyakan di mana Anda meninggalkan sesuatu</p>
+                  <p className="mt-1 text-base text-muted-foreground">
+                    Jawaban hanya dari catatan lokasi yang Anda simpan — dan setiap jawaban menyertakan catatan yang dipakai.
                   </p>
                 </div>
                 {showSuggestions && (
-                  <ul className="flex flex-wrap justify-center gap-2">
+                  <ul className="flex flex-wrap justify-center gap-3" aria-label="Pertanyaan saran">
                     {SUGGESTED_QUESTIONS.map((question) => (
                       <li key={question}>
                         <button
                           type="button"
                           onClick={() => setDraft(question)}
                           className={cx(
-                            "rounded-full border border-border bg-secondary px-3 py-1.5 text-dense text-secondary-foreground hover:bg-muted",
+                            "min-h-11 rounded-full border border-border bg-secondary px-4 py-2 text-base text-secondary-foreground hover:bg-muted",
                             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                           )}
                         >
@@ -381,16 +382,16 @@ function AssistantView() {
                 if (entry.kind === "user") {
                   return (
                     <div key={entry.id} className="flex justify-end">
-                      <div className="max-w-[85%] rounded-lg bg-accent px-3 py-2 text-dense text-accent-foreground">
-                        <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide opacity-80">
-                          <User size={12} />
-                          You
+                      <div className="max-w-[85%] rounded-lg bg-accent px-3 py-2 text-base text-accent-foreground">
+                        <p className="mb-1 flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide opacity-80">
+                          <User size={12} aria-hidden="true" />
+                          Anda
                         </p>
                         <p className="whitespace-pre-wrap">{entry.text}</p>
                         {entry.createdAt && (
                           <time
                             dateTime={toDateTimeAttr(entry.createdAt)}
-                            className="mt-1 block text-right text-xs opacity-70"
+                            className="mt-1 block text-right text-sm opacity-70"
                           >
                             {formatRelativeTime(entry.createdAt)}
                           </time>
@@ -402,14 +403,14 @@ function AssistantView() {
                 if (entry.kind === "error") {
                   return (
                     <div key={entry.id} className="flex justify-start">
-                      <div className="max-w-[85%] rounded-lg border border-destructive/40 bg-danger-surface px-3 py-2 text-dense">
+                      <div className="max-w-[85%] rounded-lg border border-destructive/40 bg-danger-surface px-3 py-2 text-base">
                         <p className="flex items-center gap-1.5 font-semibold text-destructive">
-                          <WifiOff size={14} />
-                          The assistant is temporarily unavailable. Your records are safe.
+                          <WifiOff size={14} aria-hidden="true" />
+                          Asisten sedang tidak tersedia untuk sementara. Catatan Anda aman.
                         </p>
                         <p className="mt-1 text-foreground">{entry.message}</p>
-                        <Button size="sm" variant="secondary" onClick={entry.retry} className="mt-2">
-                          Retry
+                        <Button size="sm" variant="secondary" className="mt-2 min-h-11 text-lg" onClick={entry.retry}>
+                          Coba lagi
                         </Button>
                       </div>
                     </div>
@@ -429,15 +430,15 @@ function AssistantView() {
               {pending && (
                 <div className="flex justify-start">
                   <div
-                    className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-dense text-muted-foreground"
+                    className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-base text-muted-foreground"
                     role="status"
                   >
-                    <span className="flex gap-1">
+                    <span className="flex gap-1" aria-hidden="true">
                       <span className="size-1.5 animate-bounce rounded-full bg-current [animation-delay:0ms]" />
                       <span className="size-1.5 animate-bounce rounded-full bg-current [animation-delay:150ms]" />
                       <span className="size-1.5 animate-bounce rounded-full bg-current [animation-delay:300ms]" />
                     </span>
-                    Assistant is thinking
+                    Asisten sedang berpikir…
                   </div>
                 </div>
               )}
@@ -455,15 +456,15 @@ function AssistantView() {
             {composerError && (
               <p
                 role="alert"
-                className="mb-2 rounded-md border border-destructive/40 bg-danger-surface p-2 text-dense text-destructive"
+                className="mb-2 rounded-md border border-destructive/40 bg-danger-surface p-2 text-base text-destructive"
               >
                 {composerError}
               </p>
             )}
-            <div className="flex items-end gap-2">
+            <div className="flex items-end gap-3">
               <Textarea
-                aria-label="Message the assistant"
-                placeholder="Where did I put…?"
+                aria-label="Tulis pesan untuk asisten"
+                placeholder="Di mana saya menyimpan…?"
                 value={draft}
                 maxLength={2000}
                 onChange={(event) => setDraft(event.target.value)}
@@ -473,15 +474,20 @@ function AssistantView() {
                     void send(draft);
                   }
                 }}
-                className="min-h-16"
+                className="min-h-16 text-lg"
               />
-              <Button type="submit" disabled={pending || draft.trim().length === 0} iconLeft={<Send size={16} />}>
-                Send
+              <Button
+                type="submit"
+                className="min-h-12 text-lg"
+                disabled={pending || draft.trim().length === 0}
+                iconLeft={<Send size={16} aria-hidden="true" />}
+              >
+                Kirim
               </Button>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Enter sends — Shift+Enter adds a new line. Nothing is written to your records without your
-              confirmation.
+            <p className="mt-1 text-base text-muted-foreground">
+              Enter untuk mengirim — Shift+Enter untuk baris baru. Tidak ada yang disimpan ke catatan
+              Anda tanpa persetujuan Anda.
             </p>
           </form>
         </div>
@@ -490,15 +496,15 @@ function AssistantView() {
       <Dialog
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
-        title="Delete this conversation?"
-        description="This permanently deletes the messages in this conversation. It cannot be undone."
+        title="Hapus percakapan ini?"
+        description="Semua pesan dalam percakapan ini akan dihapus permanen dan tidak bisa dibatalkan."
         footer={
           <>
-            <Button variant="secondary" onClick={() => setDeleteOpen(false)} disabled={deleteBusy}>
-              Cancel
+            <Button variant="secondary" className="min-h-11 text-lg" onClick={() => setDeleteOpen(false)} disabled={deleteBusy}>
+              Batal
             </Button>
-            <Button variant="danger" loading={deleteBusy} onClick={() => void deleteConversation()}>
-              Delete
+            <Button variant="danger" className="min-h-11 text-lg" loading={deleteBusy} onClick={() => void deleteConversation()}>
+              Hapus
             </Button>
           </>
         }
@@ -527,21 +533,21 @@ function ConversationList({
   return (
     <div className="rounded-lg border border-border bg-card shadow-subtle">
       <div className="border-b border-border p-3">
-        <Button size="sm" onClick={onNew} iconLeft={<Plus size={14} />} className="w-full">
-          New conversation
+        <Button onClick={onNew} className="w-full min-h-11 text-lg" iconLeft={<Plus size={14} aria-hidden="true" />}>
+          Percakapan baru
         </Button>
       </div>
       <div className="p-2">
         {loading && (
           <div className="flex flex-col gap-2" aria-hidden="true">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
           </div>
         )}
         {error ? <ErrorState error={error} onRetry={onRetry} /> : null}
         {!loading && !error && conversations.length === 0 && (
-          <p className="p-2 text-dense text-muted-foreground">No conversations yet.</p>
+          <p className="p-2 text-base text-muted-foreground">Belum ada percakapan.</p>
         )}
         {!loading && !error && conversations.length > 0 && (
           <ul className="flex flex-col gap-1">
@@ -550,8 +556,8 @@ function ConversationList({
               const label =
                 conversation.title ||
                 (conversation.lastMessageAt
-                  ? `Conversation from ${formatRelativeTime(conversation.lastMessageAt)}`
-                  : "Conversation");
+                  ? `Percakapan dari ${formatRelativeTime(conversation.lastMessageAt)}`
+                  : "Percakapan");
               return (
                 <li key={conversation.id}>
                   <button
@@ -559,7 +565,7 @@ function ConversationList({
                     onClick={() => onSelect(conversation.id)}
                     aria-current={isActive ? "true" : undefined}
                     className={cx(
-                      "w-full rounded-md px-2 py-2 text-left text-dense",
+                      "min-h-11 w-full rounded-md px-2 py-2 text-left text-base",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                       isActive ? "bg-accent font-semibold text-accent-foreground" : "text-foreground hover:bg-muted/60",
                     )}
@@ -568,7 +574,7 @@ function ConversationList({
                     {conversation.lastMessageAt && (
                       <time
                         dateTime={toDateTimeAttr(conversation.lastMessageAt)}
-                        className="block text-xs text-muted-foreground"
+                        className="block text-sm text-muted-foreground"
                       >
                         {formatRelativeTime(conversation.lastMessageAt)}
                       </time>
@@ -598,16 +604,16 @@ function AssistantBubble({
 
   return (
     <div className="flex justify-start">
-      <div className="max-w-[85%] rounded-lg border-l-4 border-primary bg-muted px-3 py-2 text-dense">
-        <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          <Sparkles size={12} />
-          Assistant
+      <div className="max-w-[85%] rounded-lg border-l-4 border-primary bg-muted px-3 py-2 text-base">
+        <p className="mb-1 flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <Sparkles size={12} aria-hidden="true" />
+          Asisten
         </p>
 
         {isFallback && (
           <p className="mb-2 flex items-center gap-1.5 rounded-md border border-warning/40 bg-warning-surface p-2 text-warning">
-            <WifiOff size={14} />
-            Using deterministic search — the assistant is degraded.
+            <WifiOff size={14} aria-hidden="true" />
+            Memakai pencarian biasa — asisten sedang terganggu.
           </p>
         )}
 
@@ -616,14 +622,14 @@ function AssistantBubble({
         {/* Recorded fact marker (§4.6) */}
         {reply.citations.length > 0 && (
           <>
-            <p className="mt-2 flex items-center gap-1.5 text-xs text-success">
-              <CheckCircle size={12} />
-              <Badge tone="success">Recorded</Badge>
+            <p className="mt-2 flex items-center gap-1.5 text-sm text-success">
+              <CheckCircle size={12} aria-hidden="true" />
+              <Badge tone="success">Tercatat</Badge>
               <span className="text-muted-foreground">
-                Based on {reply.citations.length} recorded {reply.citations.length === 1 ? "entry" : "entries"}.
+                Berdasarkan {reply.citations.length} catatan tersimpan.
               </span>
             </p>
-            <ul className="mt-2 flex flex-wrap gap-1.5">
+            <ul className="mt-2 flex flex-wrap gap-2">
               {reply.citations.map((citation, index) => (
                 <li key={`${citation.id}-${index}`}>
                   <CitationChip citation={citation} />
@@ -636,7 +642,7 @@ function AssistantBubble({
         {/* Clarification candidates (FR-009) */}
         {hasCandidates && (
           <div className="mt-3 rounded-md border border-border bg-card p-2">
-            <p className="mb-2 text-dense font-medium text-foreground">Which one did you mean?</p>
+            <p className="mb-2 text-base font-medium text-foreground">Yang mana yang Anda maksud?</p>
             <ul className="flex flex-wrap gap-2">
               {reply.candidates.map((candidate, index) => (
                 <li key={`${candidate.id ?? candidate.name}-${index}`}>
@@ -654,11 +660,11 @@ function AssistantBubble({
 
         {isExpired && reply.pendingAction && (
           <div className="mt-3 rounded-md border border-destructive/40 bg-danger-surface p-2">
-            <p className="flex items-center gap-1.5 text-dense font-medium text-destructive">
-              <AlertTriangle size={14} />
-              This proposal expired
+            <p className="flex items-center gap-1.5 text-base font-medium text-destructive">
+              <AlertTriangle size={14} aria-hidden="true" />
+              Usulan ini sudah kedaluwarsa
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">Ask again to get a fresh one.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Tanyakan lagi untuk mendapatkan usulan baru.</p>
           </div>
         )}
       </div>
@@ -667,7 +673,7 @@ function AssistantBubble({
 }
 
 function CitationChip({ citation }: { citation: CitationDto }) {
-  const label = citation.label ?? (citation.type === "item" ? "Item" : citation.type === "event" ? "Event" : "Location");
+  const label = citation.label ?? (citation.type === "item" ? "Barang" : citation.type === "event" ? "Catatan" : "Lokasi");
   const timeLabel = citation.occurredAt ? ` · ${formatRelativeTime(citation.occurredAt)}` : "";
 
   // Item citations link straight to the item. Event citations would need the
@@ -680,11 +686,11 @@ function CitationChip({ citation }: { citation: CitationDto }) {
       <Link
         href={`/inventory/${citation.id}`}
         className={cx(
-          "inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 text-xs text-foreground hover:bg-muted",
+          "inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 text-sm text-foreground hover:bg-muted",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         )}
       >
-        <MapPin size={11} />
+        <MapPin size={11} aria-hidden="true" />
         {truncate(label, 32)}
         {timeLabel}
       </Link>
@@ -692,8 +698,8 @@ function CitationChip({ citation }: { citation: CitationDto }) {
   }
 
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-      <MapPin size={11} />
+    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-sm text-muted-foreground">
+      <MapPin size={11} aria-hidden="true" />
       {truncate(label, 32)}
       {timeLabel}
     </span>
@@ -706,7 +712,7 @@ function CandidateChip({ candidate }: { candidate: { id?: string; name: string; 
       <Link
         href={`/inventory/${candidate.id}`}
         className={cx(
-          "inline-flex items-center gap-1 rounded-full border border-primary/40 bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground hover:bg-muted",
+          "inline-flex items-center gap-1 rounded-full border border-primary/40 bg-accent px-2.5 py-1 text-sm font-medium text-accent-foreground hover:bg-muted",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         )}
       >
@@ -716,7 +722,7 @@ function CandidateChip({ candidate }: { candidate: { id?: string; name: string; 
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-muted-foreground">
+    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-1 text-sm text-muted-foreground">
       {candidate.name}
       {candidate.reason && <span className="opacity-70">— {candidate.reason}</span>}
     </span>
@@ -734,13 +740,13 @@ function PendingActionCard({
   const consumed = Boolean(action.consumedAt);
   const typeLabel =
     action.type === "record_location"
-      ? "Record location"
+      ? "Catat lokasi"
       : action.type === "create_item"
-        ? "Create item"
-        : "Correct location";
+        ? "Tambah barang"
+        : "Koreksi lokasi";
 
-  const itemName = action.payload.item?.name ?? action.payload.item?.existingId ?? "this item";
-  const locationLabel = action.payload.location?.path ?? action.payload.location?.name ?? "a location";
+  const itemName = action.payload.item?.name ?? action.payload.item?.existingId ?? "barang ini";
+  const locationLabel = action.payload.location?.path ?? action.payload.location?.name ?? "sebuah lokasi";
 
   const act = async (decision: "confirm" | "cancel") => {
     setBusy(decision);
@@ -753,50 +759,50 @@ function PendingActionCard({
 
   return (
     <div className="mt-3 rounded-md border border-border bg-card p-3">
-      <p className="flex items-center gap-1.5 text-dense font-semibold text-foreground">
-        <Clock size={14} />
+      <p className="flex items-center gap-1.5 text-base font-semibold text-foreground">
+        <Clock size={14} aria-hidden="true" />
         {typeLabel}
       </p>
-      <dl className="mt-2 space-y-1 text-xs text-muted-foreground">
+      <dl className="mt-2 space-y-1 text-sm text-muted-foreground">
         <div className="flex gap-2">
-          <dt className="w-16 shrink-0">Item</dt>
+          <dt className="w-20 shrink-0">Barang</dt>
           <dd className="text-foreground">{itemName}</dd>
         </div>
         <div className="flex gap-2">
-          <dt className="w-16 shrink-0">Location</dt>
+          <dt className="w-20 shrink-0">Lokasi</dt>
           <dd className="text-foreground">{locationLabel}</dd>
         </div>
         {action.payload.occurredAt && (
           <div className="flex gap-2">
-            <dt className="w-16 shrink-0">When</dt>
+            <dt className="w-20 shrink-0">Kapan</dt>
             <dd className="text-foreground">{formatDateTime(action.payload.occurredAt)}</dd>
           </div>
         )}
         {action.payload.note && (
           <div className="flex gap-2">
-            <dt className="w-16 shrink-0">Note</dt>
+            <dt className="w-20 shrink-0">Catatan</dt>
             <dd className="text-foreground">{action.payload.note}</dd>
           </div>
         )}
       </dl>
 
       {consumed ? (
-        <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-success">
-          <CheckCircle size={12} />
-          Done
+        <p className="mt-2 flex items-center gap-1.5 text-sm font-medium text-success">
+          <CheckCircle size={12} aria-hidden="true" />
+          Selesai
         </p>
       ) : (
         <>
-          <p className="mt-2 text-xs italic text-muted-foreground">Nothing has been saved yet.</p>
-          <p className="text-xs text-muted-foreground">
-            Expires {formatRelativeTime(action.expiresAt)} ({formatDateTime(action.expiresAt)}).
+          <p className="mt-2 text-sm italic text-muted-foreground">Belum ada yang disimpan.</p>
+          <p className="text-sm text-muted-foreground">
+            Berlaku sampai {formatRelativeTime(action.expiresAt)} ({formatDateTime(action.expiresAt)}).
           </p>
-          <div className="mt-2 flex gap-2">
-            <Button size="sm" loading={busy === "confirm"} onClick={() => void act("confirm")}>
-              Confirm
+          <div className="mt-2 flex gap-3">
+            <Button size="sm" className="min-h-11 text-lg" loading={busy === "confirm"} onClick={() => void act("confirm")}>
+              Konfirmasi
             </Button>
-            <Button size="sm" variant="secondary" loading={busy === "cancel"} onClick={() => void act("cancel")}>
-              Cancel
+            <Button size="sm" variant="secondary" className="min-h-11 text-lg" loading={busy === "cancel"} onClick={() => void act("cancel")}>
+              Batal
             </Button>
           </div>
         </>

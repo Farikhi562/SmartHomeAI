@@ -26,10 +26,11 @@ import { cx } from "@/lib/cx";
  * The item's location is always *derived* from its newest event and shown with
  * the "may have moved since" caveat (FR-003.3, FR-008.1) — never as a stored
  * authoritative field. History is append-only (FR-004.2).
+ * Copy is Bahasa Indonesia; touch targets ≥ 44 px for the elderly audience.
  */
 
 const linkButtonBase =
-  "inline-flex h-9 items-center rounded-md px-4 text-base font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+  "inline-flex min-h-11 items-center rounded-md px-4 text-lg font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
 function TimelineSkeleton() {
   return (
@@ -59,31 +60,31 @@ function EventRow({ event, highlight }: { event: EventDto; highlight?: boolean }
       <span aria-hidden="true" className="mt-1.5 size-2.5 shrink-0 rounded-full bg-primary" />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="text-dense font-medium text-foreground">{event.location.path}</p>
+          <p className="text-base font-medium text-foreground">{event.location.path}</p>
           <Badge tone={event.source === "ASSISTANT" ? "info" : "muted"}>
-            {event.source === "ASSISTANT" ? <Sparkles size={12} /> : <Pencil size={12} />}
-            {event.source === "ASSISTANT" ? "Assistant" : "Manual"}
+            {event.source === "ASSISTANT" ? <Sparkles size={12} aria-hidden="true" /> : <Pencil size={12} aria-hidden="true" />}
+            {event.source === "ASSISTANT" ? "Asisten" : "Manual"}
           </Badge>
           {event.confidence === "INFERRED" && (
             <Badge tone="warning">
-              <AlertTriangle size={12} />
-              Inferred
+              <AlertTriangle size={12} aria-hidden="true" />
+              Disimpulkan
             </Badge>
           )}
         </div>
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="mt-1 text-sm text-muted-foreground">
           <time dateTime={toDateTimeAttr(event.occurredAt)} title={formatDateTime(event.occurredAt)}>
-            Placed {formatDateTime(event.occurredAt)}
+            Diletakkan {formatDateTime(event.occurredAt)}
           </time>
           {" · "}
           <time
             dateTime={toDateTimeAttr(event.recordedAt)}
             title={formatDateTime(event.recordedAt)}
           >
-            recorded {formatRelativeTime(event.recordedAt)}
+            dicatat {formatRelativeTime(event.recordedAt)}
           </time>
         </p>
-        {event.note && <p className="mt-1 text-dense text-muted-foreground">{event.note}</p>}
+        {event.note && <p className="mt-1 text-base text-muted-foreground">{event.note}</p>}
       </div>
     </li>
   );
@@ -117,16 +118,16 @@ function ItemDetail() {
       await api.items.archive(item.id);
       itemState.reload();
       toast({
-        title: "Item archived",
-        description: "It's hidden from the active view.",
+        title: "Barang diarsipkan",
+        description: "Barang disembunyikan dari daftar aktif.",
         tone: "success",
         action: {
-          label: "Undo",
+          label: "Urungkan",
           onClick: () => {
             void api.items.unarchive(item.id).then(
               () => {
                 itemState.reload();
-                toast({ title: "Restored", tone: "success" });
+                toast({ title: "Berhasil dipulihkan", tone: "success" });
               },
               (error: unknown) => toast({ title: toApiError(error).message, tone: "error" }),
             );
@@ -139,8 +140,8 @@ function ItemDetail() {
         const items = apiError.numberExtra("referencedByItems");
         const evts = apiError.numberExtra("referencedByEvents");
         toast({
-          title: "Can't archive yet",
-          description: `Still referenced by ${items ?? "some"} item(s) and ${evts ?? "some"} event(s).`,
+          title: "Belum bisa diarsipkan",
+          description: `Masih dirujuk oleh ${items ?? "beberapa"} barang dan ${evts ?? "beberapa"} catatan.`,
           tone: "error",
         });
         return;
@@ -154,7 +155,7 @@ function ItemDetail() {
     try {
       await api.items.unarchive(item.id);
       itemState.reload();
-      toast({ title: "Item restored", tone: "success" });
+      toast({ title: "Barang dipulihkan", tone: "success" });
     } catch (error) {
       toast({ title: toApiError(error).message, tone: "error" });
     }
@@ -165,7 +166,7 @@ function ItemDetail() {
     try {
       await api.items.restore(item.id);
       itemState.reload();
-      toast({ title: "Item restored", tone: "success" });
+      toast({ title: "Barang dipulihkan", tone: "success" });
     } catch (error) {
       toast({ title: toApiError(error).message, tone: "error" });
     }
@@ -178,8 +179,8 @@ function ItemDetail() {
     try {
       await api.items.remove(item.id);
       toast({
-        title: "Item deleted",
-        description: `${item.name} can be restored for 30 days.`,
+        title: "Barang dihapus",
+        description: `${item.name} bisa dipulihkan selama 30 hari.`,
         tone: "success",
       });
       router.push("/inventory");
@@ -196,8 +197,8 @@ function ItemDetail() {
       eventsState.reload();
       itemState.reload();
       toast({
-        title: "Location recorded",
-        description: `${item?.name ?? "Item"} → ${event.location.path}`,
+        title: "Lokasi dicatat",
+        description: `${item?.name ?? "Barang"} → ${event.location.path}`,
         tone: "success",
       });
     },
@@ -210,15 +211,15 @@ function ItemDetail() {
     return (
       <>
         <PageHeader
-          title="Loading item…"
-          breadcrumbs={[{ label: "Inventory", href: "/inventory" }, { label: "Item" }]}
+          title="Memuat barang…"
+          breadcrumbs={[{ label: "Barang", href: "/inventory" }, { label: "Barang" }]}
         />
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Skeleton className="h-40 rounded-lg" />
           <Skeleton className="h-40 rounded-lg" />
         </div>
         <span role="status" className="sr-only">
-          Loading item
+          Memuat barang…
         </span>
       </>
     );
@@ -229,15 +230,15 @@ function ItemDetail() {
     return (
       <>
         <PageHeader
-          title="Item"
-          breadcrumbs={[{ label: "Inventory", href: "/inventory" }, { label: "Item" }]}
+          title="Barang"
+          breadcrumbs={[{ label: "Barang", href: "/inventory" }, { label: "Barang" }]}
         />
         {notFound ? (
           <EmptyState
             headingLevel={2}
             icon={<Box size={32} />}
-            title="We can't find that item"
-            description="It may have been deleted, or it isn't yours."
+            title="Barang tidak ditemukan"
+            description="Barangnya mungkin sudah dihapus, atau bukan milik Anda."
             action={
               <Link
                 href="/inventory"
@@ -246,7 +247,7 @@ function ItemDetail() {
                   "bg-primary text-primary-foreground hover:bg-primary-hover",
                 )}
               >
-                Back to inventory
+                Kembali ke daftar barang
               </Link>
             }
           />
@@ -261,35 +262,60 @@ function ItemDetail() {
     <>
       <PageHeader
         title={truncate(item.name, 60)}
-        breadcrumbs={[{ label: "Inventory", href: "/inventory" }, { label: item.name }]}
-        subtitle={item.category ? `Category: ${item.category}` : "No category"}
+        breadcrumbs={[{ label: "Barang", href: "/inventory" }, { label: item.name }]}
+        subtitle={item.category ? `Kategori: ${item.category}` : "Tanpa kategori"}
         actions={
           <>
             <Button
               variant="secondary"
+              className="min-h-11 text-lg"
               onClick={() => router.push(`/inventory/${item.id}/edit`)}
-              iconLeft={<Pencil size={16} />}
+              iconLeft={<Pencil size={16} aria-hidden="true" />}
             >
-              Edit
+              Ubah
             </Button>
-            <Button onClick={() => setRecordOpen(true)} iconLeft={<MapPin size={16} />}>
-              Record location
+            <Button
+              className="min-h-11 text-lg"
+              onClick={() => setRecordOpen(true)}
+              iconLeft={<MapPin size={16} aria-hidden="true" />}
+            >
+              Catat lokasi
             </Button>
             {item.deletedAt ? (
-              <Button variant="secondary" onClick={() => void restore()} iconLeft={<RotateCcw size={16} />}>
-                Restore
+              <Button
+                variant="secondary"
+                className="min-h-11 text-lg"
+                onClick={() => void restore()}
+                iconLeft={<RotateCcw size={16} aria-hidden="true" />}
+              >
+                Pulihkan
               </Button>
             ) : item.archivedAt ? (
-              <Button variant="secondary" onClick={() => void unarchive()} iconLeft={<RotateCcw size={16} />}>
-                Restore
+              <Button
+                variant="secondary"
+                className="min-h-11 text-lg"
+                onClick={() => void unarchive()}
+                iconLeft={<RotateCcw size={16} aria-hidden="true" />}
+              >
+                Pulihkan
               </Button>
             ) : (
-              <Button variant="secondary" onClick={() => void archive()} iconLeft={<Archive size={16} />}>
-                Archive
+              <Button
+                variant="secondary"
+                className="min-h-11 text-lg"
+                onClick={() => void archive()}
+                iconLeft={<Archive size={16} aria-hidden="true" />}
+              >
+                Arsipkan
               </Button>
             )}
-            <Button variant="danger" onClick={() => setDeleteOpen(true)} iconLeft={<Trash size={16} />}>
-              Delete
+            <Button
+              variant="danger"
+              className="min-h-11 text-lg"
+              onClick={() => setDeleteOpen(true)}
+              iconLeft={<Trash size={16} aria-hidden="true" />}
+            >
+              Hapus
             </Button>
           </>
         }
@@ -298,19 +324,19 @@ function ItemDetail() {
       {item.deletedAt && (
         <div
           role="status"
-          className="mb-4 flex items-start gap-2 rounded-md border border-warning/40 bg-warning-surface p-3 text-dense text-warning"
+          className="mb-4 flex items-start gap-2 rounded-md border border-warning/40 bg-warning-surface p-3 text-base text-warning"
         >
-          <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-          <span>This item was deleted. You can restore it until it is permanently removed.</span>
+          <AlertTriangle size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+          <span>Barang ini sudah dihapus. Anda bisa memulihkannya sebelum dihapus permanen.</span>
         </div>
       )}
       {item.archivedAt && !item.deletedAt && (
         <div
           role="status"
-          className="mb-4 flex items-start gap-2 rounded-md border border-border bg-muted p-3 text-dense text-muted-foreground"
+          className="mb-4 flex items-start gap-2 rounded-md border border-border bg-muted p-3 text-base text-foreground"
         >
-          <Archive size={16} className="mt-0.5 shrink-0" />
-          <span>This item is archived. Restore it to bring it back to your active list.</span>
+          <Archive size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+          <span>Barang ini sedang diarsipkan. Pulihkan untuk mengembalikannya ke daftar aktif.</span>
         </div>
       )}
 
@@ -319,30 +345,30 @@ function ItemDetail() {
         <div className="flex flex-col gap-4">
           <Card>
             <CardHeader>
-              <CardTitle>Details</CardTitle>
+              <CardTitle>Detail</CardTitle>
               {item.createdVia === "ASSISTANT" && (
                 <Badge tone="info">
-                  <Sparkles size={12} />
-                  Added by assistant
+                  <Sparkles size={12} aria-hidden="true" />
+                  Ditambahkan oleh asisten
                 </Badge>
               )}
             </CardHeader>
             <CardContent>
-              <dl className="divide-y divide-border text-dense">
+              <dl className="divide-y divide-border text-base">
                 <div className="flex gap-4 py-2">
-                  <dt className="w-32 shrink-0 text-muted-foreground">Name</dt>
+                  <dt className="w-32 shrink-0 font-medium text-muted-foreground">Nama</dt>
                   <dd className="text-foreground">{item.name}</dd>
                 </div>
                 <div className="flex gap-4 py-2">
-                  <dt className="w-32 shrink-0 text-muted-foreground">Category</dt>
-                  <dd className="text-foreground">{item.category || "No category"}</dd>
+                  <dt className="w-32 shrink-0 font-medium text-muted-foreground">Kategori</dt>
+                  <dd className="text-foreground">{item.category || "Tanpa kategori"}</dd>
                 </div>
                 <div className="flex gap-4 py-2">
-                  <dt className="w-32 shrink-0 text-muted-foreground">Description</dt>
+                  <dt className="w-32 shrink-0 font-medium text-muted-foreground">Deskripsi</dt>
                   <dd className="text-foreground">{item.description || "—"}</dd>
                 </div>
                 <div className="flex gap-4 py-2">
-                  <dt className="w-32 shrink-0 text-muted-foreground">Created</dt>
+                  <dt className="w-32 shrink-0 font-medium text-muted-foreground">Dibuat</dt>
                   <dd>
                     <time
                       dateTime={toDateTimeAttr(item.createdAt)}
@@ -354,7 +380,7 @@ function ItemDetail() {
                   </dd>
                 </div>
                 <div className="flex gap-4 py-2">
-                  <dt className="w-32 shrink-0 text-muted-foreground">Last updated</dt>
+                  <dt className="w-32 shrink-0 font-medium text-muted-foreground">Terakhir diperbarui</dt>
                   <dd>
                     <time
                       dateTime={toDateTimeAttr(item.updatedAt)}
@@ -371,15 +397,15 @@ function ItemDetail() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Where it is now</CardTitle>
+              <CardTitle>Di mana letaknya sekarang</CardTitle>
             </CardHeader>
             <CardContent>
               {item.lastLocation ? (
                 <>
                   <p className="text-lg font-semibold text-foreground">{item.lastLocation.name}</p>
-                  <p className="text-dense text-muted-foreground">{item.lastLocation.path}</p>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    <Clock size={12} className="mr-1 inline" />
+                  <p className="text-base text-muted-foreground">{item.lastLocation.path}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    <Clock size={12} className="mr-1 inline" aria-hidden="true" />
                     <time
                       dateTime={toDateTimeAttr(item.lastLocation.occurredAt)}
                       title={formatDateTime(item.lastLocation.occurredAt)}
@@ -387,15 +413,19 @@ function ItemDetail() {
                       {formatRelativeTime(item.lastLocation.occurredAt)}
                     </time>
                   </p>
-                  <p className="mt-3 text-xs italic text-muted-foreground">
-                    Last recorded — the item may have moved since.
+                  <p className="mt-3 text-sm italic text-muted-foreground">
+                    Itulah lokasi terakhir yang tercatat — barangnya mungkin sudah dipindahkan sejak saat itu.
                   </p>
                 </>
               ) : (
                 <div className="flex flex-col items-start gap-3">
-                  <p className="text-dense text-muted-foreground">Never recorded.</p>
-                  <Button onClick={() => setRecordOpen(true)} iconLeft={<MapPin size={16} />}>
-                    Record where you put it
+                  <p className="text-base text-muted-foreground">Belum pernah dicatat.</p>
+                  <Button
+                    className="min-h-11 text-lg"
+                    onClick={() => setRecordOpen(true)}
+                    iconLeft={<MapPin size={16} aria-hidden="true" />}
+                  >
+                    Catat di mana Anda meletakkannya
                   </Button>
                 </div>
               )}
@@ -406,14 +436,19 @@ function ItemDetail() {
         {/* Timeline */}
         <Card>
           <CardHeader>
-            <CardTitle>Location history</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => setRecordOpen(true)} iconLeft={<Plus size={14} />}>
-              Record
+            <CardTitle>Riwayat lokasi</CardTitle>
+            <Button
+              variant="ghost"
+              className="min-h-11 text-lg"
+              onClick={() => setRecordOpen(true)}
+              iconLeft={<Plus size={14} aria-hidden="true" />}
+            >
+              Catat
             </Button>
           </CardHeader>
           <CardContent>
-            <p className="mb-3 text-xs text-muted-foreground">
-              History can&apos;t be edited — record a new entry to correct it.
+            <p className="mb-3 text-base text-muted-foreground">
+              Riwayat tidak bisa diubah — untuk mengoreksi, catatlah entri baru.
             </p>
             {eventsState.loading && <TimelineSkeleton />}
             {!eventsState.loading && eventsState.error && (
@@ -421,11 +456,15 @@ function ItemDetail() {
             )}
             {!eventsState.loading && !eventsState.error && events.length === 0 && (
               <EmptyState
-                title="No location recorded yet"
-                description="Items can exist without a location — add one when you know where it lives."
+                title="Belum ada lokasi tercatat"
+                description="Barang tetap tersimpan tanpa lokasi — tambahkan ketika Anda tahu di mana letaknya."
                 action={
-                  <Button onClick={() => setRecordOpen(true)} iconLeft={<MapPin size={16} />}>
-                    Record location
+                  <Button
+                    className="min-h-11 text-lg"
+                    onClick={() => setRecordOpen(true)}
+                    iconLeft={<MapPin size={16} aria-hidden="true" />}
+                  >
+                    Catat lokasi
                   </Button>
                 }
               />
@@ -451,15 +490,15 @@ function ItemDetail() {
       <Dialog
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
-        title="Delete this item?"
-        description={`“${item.name}” will be removed from your active records. You can restore it for 30 days.`}
+        title="Hapus barang ini?"
+        description={`“${item.name}” akan dihapus dari catatan aktif Anda. Barang bisa dipulihkan selama 30 hari.`}
         footer={
           <>
-            <Button variant="secondary" onClick={() => setDeleteOpen(false)} disabled={deleteBusy}>
-              Cancel
+            <Button variant="secondary" className="min-h-11 text-lg" onClick={() => setDeleteOpen(false)} disabled={deleteBusy}>
+              Batal
             </Button>
-            <Button variant="danger" loading={deleteBusy} onClick={() => void confirmDelete()}>
-              Delete
+            <Button variant="danger" className="min-h-11 text-lg" loading={deleteBusy} onClick={() => void confirmDelete()}>
+              Hapus
             </Button>
           </>
         }
@@ -467,7 +506,7 @@ function ItemDetail() {
         {deleteError && (
           <p
             role="alert"
-            className="rounded-md border border-destructive/40 bg-danger-surface p-3 text-dense text-destructive"
+            className="rounded-md border border-destructive/40 bg-danger-surface p-3 text-base text-destructive"
           >
             {deleteError}
           </p>

@@ -13,7 +13,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { Input } from "@/components/ui/Input";
 import { SkeletonRows } from "@/components/ui/Skeleton";
 import { Box, History, Lightbulb, MapPin, Plus, Search, Sparkles } from "@/components/ui/icons";
-import { formatDateTime, formatRelativeTime, toDateTimeAttr, truncate } from "@/lib/format";
+import { toDateTimeAttr, truncate } from "@/lib/format";
 import { cx } from "@/lib/cx";
 
 /**
@@ -26,6 +26,38 @@ import { cx } from "@/lib/cx";
 
 const RECENT_WINDOW_DAYS = 7;
 const LIST_CAP = 5;
+
+/* Indonesian labels — `src/lib/format.ts` stays locale-neutral (English). */
+const RELATIVE_UNITS: ReadonlyArray<[Intl.RelativeTimeFormatUnit, number]> = [
+  ["year", 365 * 24 * 60 * 60],
+  ["month", 30 * 24 * 60 * 60],
+  ["week", 7 * 24 * 60 * 60],
+  ["day", 24 * 60 * 60],
+  ["hour", 60 * 60],
+  ["minute", 60],
+  ["second", 1],
+];
+const relativeTime = new Intl.RelativeTimeFormat("id", { numeric: "auto" });
+const absoluteDateTime = new Intl.DateTimeFormat("id-ID", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+/** "baru saja" → "5 menit yang lalu" → "2 hari yang lalu". */
+function relTime(value: string | Date, now: Date = new Date()): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const deltaSec = Math.round((date.getTime() - now.getTime()) / 1000);
+  const abs = Math.abs(deltaSec);
+  if (abs < 45) return "baru saja";
+  for (const [unit, seconds] of RELATIVE_UNITS) {
+    if (abs >= seconds) return relativeTime.format(Math.round(deltaSec / seconds), unit);
+  }
+  return "baru saja";
+}
 
 function StatCard({
   label,
@@ -42,14 +74,14 @@ function StatCard({
 }) {
   const body = (
     <div className="flex items-center gap-3">
-      <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
+      <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
         {icon}
       </span>
       <div className="min-w-0">
         <p className="text-2xl font-bold tabular-nums text-foreground">
           {loading || value === null ? "—" : value}
         </p>
-        <p className="truncate text-dense text-muted-foreground">{label}</p>
+        <p className="truncate text-dense font-medium text-muted-foreground">{label}</p>
       </div>
     </div>
   );
@@ -58,7 +90,7 @@ function StatCard({
       <Link
         href={href}
         className={cx(
-          "rounded-lg border border-border bg-card p-4 shadow-subtle block transition-colors hover:bg-muted/50",
+          "block rounded-lg border border-border bg-card p-4 transition-colors hover:bg-muted/50",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         )}
       >
@@ -66,7 +98,7 @@ function StatCard({
       </Link>
     );
   }
-  return <div className="rounded-lg border border-border bg-card p-4 shadow-subtle">{body}</div>;
+  return <div className="rounded-lg border border-border bg-card p-4">{body}</div>;
 }
 
 function QuickSearch() {
@@ -84,24 +116,24 @@ function QuickSearch() {
     <form
       role="search"
       onSubmit={submit}
-      className="mb-5 flex items-center gap-2 rounded-lg border border-border bg-card p-3 shadow-subtle"
+      className="mb-5 flex items-center gap-3 rounded-lg border border-border bg-card p-3"
     >
       <div className="relative min-w-0 flex-1">
         <Search
-          size={16}
+          size={18}
           className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
         />
         <Input
           type="search"
-          aria-label="Quick search items and locations"
-          placeholder="Where did I put…?"
+          aria-label="Cari cepat barang dan lokasi"
+          placeholder="Barang saya taruh di…"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          className="pl-9"
+          className="pl-10"
         />
       </div>
       <Button type="submit" variant="secondary" disabled={query.trim().length < 2}>
-        Search
+        Cari
       </Button>
     </form>
   );
@@ -116,22 +148,22 @@ function RecentItemsCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recently updated</CardTitle>
+        <CardTitle>Barang terbaru</CardTitle>
         <Link
           href="/inventory?sort=updatedAt"
           className={cx(
-            "text-dense font-medium text-primary underline-offset-4 hover:underline",
+            "flex min-h-11 items-center text-dense font-medium text-primary underline-offset-4 hover:underline",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm",
           )}
         >
-          View all
+          Lihat semua
         </Link>
       </CardHeader>
       <CardContent>
         {state.loading && <SkeletonRows rows={5} />}
         {!state.loading && state.error && <ErrorState error={state.error} onRetry={state.reload} />}
         {!state.loading && !state.error && state.data && state.data.items.length === 0 && (
-          <p className="text-dense text-muted-foreground">Nothing here yet — add your first item.</p>
+          <p className="text-base text-foreground">Belum ada apa pun di sini — tambahkan barang pertama Anda.</p>
         )}
         {!state.loading && !state.error && state.data && state.data.items.length > 0 && (
           <ul className="divide-y divide-border">
@@ -140,24 +172,24 @@ function RecentItemsCard() {
                 <Link
                   href={`/inventory/${item.id}`}
                   className={cx(
-                    "flex items-center justify-between gap-3 rounded-md px-1 py-2.5 hover:bg-muted/50",
+                    "flex items-center justify-between gap-3 rounded-md px-2 py-3 hover:bg-muted/50",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   )}
                 >
                   <span className="min-w-0">
-                    <span className="block truncate text-dense font-medium text-foreground">
+                    <span className="block truncate text-base font-medium text-foreground">
                       {truncate(item.name, 48)}
                     </span>
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {item.lastLocation ? truncate(item.lastLocation.path, 48) : "Never recorded"}
+                    <span className="block truncate text-dense text-muted-foreground">
+                      {item.lastLocation ? truncate(item.lastLocation.path, 48) : "Belum pernah dicatat"}
                     </span>
                   </span>
                   <time
                     dateTime={toDateTimeAttr(item.updatedAt)}
-                    title={formatDateTime(item.updatedAt)}
-                    className="shrink-0 text-xs text-muted-foreground"
+                    title={absoluteDateTime.format(new Date(item.updatedAt))}
+                    className="shrink-0 text-dense text-muted-foreground"
                   >
-                    {formatRelativeTime(item.updatedAt)}
+                    {relTime(item.updatedAt)}
                   </time>
                 </Link>
               </li>
@@ -178,23 +210,23 @@ function RecentLocationsCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recently recorded</CardTitle>
+        <CardTitle>Riwayat terbaru</CardTitle>
         <Link
           href="/activity"
           className={cx(
-            "text-dense font-medium text-primary underline-offset-4 hover:underline",
+            "flex min-h-11 items-center text-dense font-medium text-primary underline-offset-4 hover:underline",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm",
           )}
         >
-          View all
+          Lihat semua
         </Link>
       </CardHeader>
       <CardContent>
         {state.loading && <SkeletonRows rows={5} />}
         {!state.loading && state.error && <ErrorState error={state.error} onRetry={state.reload} />}
         {!state.loading && !state.error && state.data && state.data.events.length === 0 && (
-          <p className="text-dense text-muted-foreground">
-            No locations recorded in the last {RECENT_WINDOW_DAYS} days.
+          <p className="text-base text-foreground">
+            Belum ada lokasi yang dicatat dalam {RECENT_WINDOW_DAYS} hari terakhir.
           </p>
         )}
         {!state.loading && !state.error && state.data && state.data.events.length > 0 && (
@@ -204,24 +236,24 @@ function RecentLocationsCard() {
                 <Link
                   href={event.item ? `/inventory/${event.item.id}` : "/activity"}
                   className={cx(
-                    "flex items-center justify-between gap-3 rounded-md px-1 py-2.5 hover:bg-muted/50",
+                    "flex items-center justify-between gap-3 rounded-md px-2 py-3 hover:bg-muted/50",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   )}
                 >
                   <span className="min-w-0">
-                    <span className="block truncate text-dense font-medium text-foreground">
-                      {truncate(event.item?.name ?? "An item", 40)}
+                    <span className="block truncate text-base font-medium text-foreground">
+                      {truncate(event.item?.name ?? "Sebuah barang", 40)}
                     </span>
-                    <span className="block truncate text-xs text-muted-foreground">
+                    <span className="block truncate text-dense text-muted-foreground">
                       → {truncate(event.location.path, 44)}
                     </span>
                   </span>
                   <time
                     dateTime={toDateTimeAttr(event.occurredAt)}
-                    title={formatDateTime(event.occurredAt)}
-                    className="shrink-0 text-xs text-muted-foreground"
+                    title={absoluteDateTime.format(new Date(event.occurredAt))}
+                    className="shrink-0 text-dense text-muted-foreground"
                   >
-                    {formatRelativeTime(event.occurredAt)}
+                    {relTime(event.occurredAt)}
                   </time>
                 </Link>
               </li>
@@ -252,145 +284,145 @@ export default function DashboardPage() {
 
   return (
     <>
-      <PageHeader title="Dashboard" subtitle="What you have, and where you last left it." />
+      <PageHeader title="Beranda" subtitle="Barang Anda dan di mana terakhir kali Anda meletakkannya." />
       <QuickSearch />
 
       {bothEmpty ? (
         <EmptyState
           headingLevel={2}
           icon={<Sparkles size={32} />}
-          title="Let's record your first things"
-          description="Add a location, add an item, then ask the assistant where you left something."
+          title="Ayo catat barang pertama Anda"
+          description="Tambahkan satu lokasi, masukkan barang Anda, lalu tanyakan ke asisten di mana Anda meletakkan sesuatu."
           action={
             <Link
               href="/locations"
               className={cx(
-                "inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-base font-medium text-primary-foreground hover:bg-primary-hover",
+                "inline-flex h-11 items-center gap-2 rounded-md bg-primary px-5 text-base font-medium text-primary-foreground hover:bg-primary-hover",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               )}
             >
-              <MapPin size={16} />
-              Add a location
+              <MapPin size={18} />
+              Tambah lokasi
             </Link>
           }
           secondaryAction={
             <Link
               href="/inventory/new"
               className={cx(
-                "inline-flex h-9 items-center gap-2 rounded-md border border-border-strong bg-secondary px-4 text-base font-medium text-secondary-foreground hover:bg-muted",
+                "inline-flex h-11 items-center gap-2 rounded-md border border-border-strong bg-secondary px-5 text-base font-medium text-secondary-foreground hover:bg-muted",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               )}
             >
-              <Plus size={16} />
-              Add an item
+              <Plus size={18} />
+              Tambah barang
             </Link>
           }
         />
       ) : (
         <>
-          <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <StatCard
-              label="Active items"
+              label="Barang aktif"
               value={totalItems}
               loading={itemsState.loading}
-              icon={<Box size={18} />}
+              icon={<Box size={20} />}
               href="/inventory?status=active"
             />
             <StatCard
-              label="Locations"
+              label="Lokasi"
               value={totalLocations}
               loading={locationsState.loading}
-              icon={<MapPin size={18} />}
+              icon={<MapPin size={20} />}
               href="/locations"
             />
             <StatCard
-              label={`Recorded (last ${RECENT_WINDOW_DAYS} days)`}
+              label={`Dicatat (${RECENT_WINDOW_DAYS} hari terakhir)`}
               value={activityState.data?.pagination.total ?? null}
               loading={activityState.loading}
-              icon={<History size={18} />}
+              icon={<History size={20} />}
               href="/activity"
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
             <RecentItemsCard />
             <RecentLocationsCard />
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
             <Card>
-              <CardContent className="flex h-full flex-col gap-3">
+              <CardContent className="flex h-full flex-col gap-4">
                 <div className="flex items-center gap-3">
-                  <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
-                    <Sparkles size={18} />
+                  <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
+                    <Sparkles size={20} />
                   </span>
-                  <div>
-                    <p className="text-base font-semibold text-foreground">Ask the assistant</p>
-                    <p className="text-dense text-muted-foreground">
-                      “Where did I last put my motorcycle keys?”
+                  <div className="min-w-0">
+                    <p className="text-lg font-semibold text-foreground">Tanya asisten</p>
+                    <p className="text-base text-muted-foreground">
+                      “Di mana saya taruh kunci motor saya?”
                     </p>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Answers come only from your recorded locations — the assistant cites the entries it
-                  used and asks before writing anything new.
+                <p className="text-base text-foreground">
+                  Jawaban hanya diambil dari lokasi yang Anda catat — asisten menyebut sumbernya dan
+                  selalu meminta izin sebelum menulis sesuatu yang baru.
                 </p>
-                <div className="mt-auto flex items-center gap-2 pt-2">
+                <div className="mt-auto flex flex-wrap items-center gap-3 pt-2">
                   <Link
                     href="/assistant"
                     className={cx(
-                      "inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-base font-medium text-primary-foreground hover:bg-primary-hover",
+                      "inline-flex h-11 items-center gap-2 rounded-md bg-primary px-5 text-base font-medium text-primary-foreground hover:bg-primary-hover",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                     )}
                   >
-                    <Lightbulb size={16} />
-                    Open assistant
+                    <Lightbulb size={18} />
+                    Buka asisten
                   </Link>
                   <Link
                     href="/search"
                     className={cx(
-                      "inline-flex h-9 items-center rounded-md border border-border-strong bg-secondary px-4 text-base font-medium text-secondary-foreground hover:bg-muted",
+                      "inline-flex h-11 items-center gap-2 rounded-md border border-border-strong bg-secondary px-5 text-base font-medium text-secondary-foreground hover:bg-muted",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                     )}
                   >
-                    <Search size={16} />
-                    Search instead
+                    <Search size={18} />
+                    Cari sendiri
                   </Link>
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="flex h-full flex-col gap-3">
+              <CardContent className="flex h-full flex-col gap-4">
                 <div className="flex items-center gap-3">
-                  <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
-                    <Plus size={18} />
+                  <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
+                    <Plus size={20} />
                   </span>
-                  <div>
-                    <p className="text-base font-semibold text-foreground">Quick actions</p>
-                    <p className="text-dense text-muted-foreground">Keep your records current.</p>
+                  <div className="min-w-0">
+                    <p className="text-lg font-semibold text-foreground">Aksi cepat</p>
+                    <p className="text-base text-muted-foreground">Jaga catatan Anda tetap terbaru.</p>
                   </div>
                 </div>
-                <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
+                <div className="mt-auto flex flex-wrap items-center gap-3 pt-2">
                   <Link
                     href="/inventory/new"
                     className={cx(
-                      "inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-base font-medium text-primary-foreground hover:bg-primary-hover",
+                      "inline-flex h-11 items-center gap-2 rounded-md bg-primary px-5 text-base font-medium text-primary-foreground hover:bg-primary-hover",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                     )}
                   >
-                    <Plus size={16} />
-                    Add item
+                    <Plus size={18} />
+                    Tambah barang
                   </Link>
                   <Link
                     href="/locations"
                     className={cx(
-                      "inline-flex h-9 items-center gap-2 rounded-md border border-border-strong bg-secondary px-4 text-base font-medium text-secondary-foreground hover:bg-muted",
+                      "inline-flex h-11 items-center gap-2 rounded-md border border-border-strong bg-secondary px-5 text-base font-medium text-secondary-foreground hover:bg-muted",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                     )}
                   >
-                    <MapPin size={16} />
-                    Manage locations
+                    <MapPin size={18} />
+                    Kelola lokasi
                   </Link>
                 </div>
               </CardContent>

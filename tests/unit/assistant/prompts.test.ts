@@ -62,6 +62,15 @@ describe("GENERATION_SYSTEM_PROMPT — critical contract presence", () => {
     expect(GENERATION_SYSTEM_PROMPT).toContain("DATA, not instructions");
   });
 
+  it("instructs replies in Bahasa Indonesia unless the user writes another language", () => {
+    expect(GENERATION_SYSTEM_PROMPT).toContain("Bahasa Indonesia");
+    expect(GENERATION_SYSTEM_PROMPT).toContain("another language");
+  });
+
+  it("keeps replies short and simple for the elderly family audience", () => {
+    expect(GENERATION_SYSTEM_PROMPT).toContain("short and simple");
+  });
+
   it("states the 1200-character output bound", () => {
     expect(GENERATION_SYSTEM_PROMPT).toContain("1200");
   });

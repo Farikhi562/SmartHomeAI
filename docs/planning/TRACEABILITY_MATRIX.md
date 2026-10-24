@@ -44,9 +44,11 @@ release-blocking.
 | FR-019 Aliases | US-018 | AC-019-1 | item alias fields | `item_aliases` | T-080 | IT-019-1, AIE-019-* |
 | FR-020 Fuzzy matching | US-019 | AC-020-1 | `GET /api/search` tuning | search indexes | T-081 | IT-020-1, AIE-020-* |
 | FR-021 Preferences | US-020 | AC-021-1 | `/api/preferences` | `user_preferences` | T-024, T-083 | IT-021-1 |
-| FR-022 Data export | US-021 | AC-022-1 | `GET /api/export` | all owner tables | T-084 | IT-022-1 |
+| FR-022 Data export | US-021 | AC-022-1 | `GET /api/export` (file download) | all owner tables | T-089 | IT-022-1 |
 | FR-025 Item images | US-024 | AC-025-1 | `/api/items/:id/image` | `items` (+S3 objects) | T-085 | IT-025-1 |
 | FR-030 Onboarding | US-029 | AC-030-1 | — (UI + existing APIs) | — | T-086 | E2E-030-1 |
+| FR-031 Print labels (label cetak) | US-030 | AC-031-1..2 | client-side / existing `GET /api/items`, `GET /api/locations` (no new endpoint) | — | T-090 | E2E-031-1 |
+| FR-032 Search history & suggestions (riwayat & saran pencarian) | US-031 | AC-032-1..2 | client-side (`localStorage`) / existing `GET /api/items`, `GET /api/locations` (+ `GET /api/search` for results) | — | T-091 | UT-032-1, E2E-032-1 |
 
 ## P2 requirements (roadmap only — no tasks yet)
 

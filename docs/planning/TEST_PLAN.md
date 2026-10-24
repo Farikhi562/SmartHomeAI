@@ -78,6 +78,7 @@ release-blocking.
 | UT-013-1 | FR-013 | Retry policy: max 2 retries, exponential backoff, retry only on 429/5xx/network, within 15 s timeout |
 | UT-017-1 | FR-017 | Location rules: depth ≤ 3, case-insensitive sibling uniqueness among non-archived siblings |
 | UT-023-1 | FR-023 | Log-redaction guard: message/content fields never reach log output (metadata only) |
+| UT-032-1 | FR-032 (P1) | Client-side search history: cap at 10 (oldest dropped), most-recent-first + dedupe, chip removal/clear-all, corrupt or absent `localStorage` degrades to empty history |
 
 ### 4.2 Integration tests (`IT`) — real endpoint → service → local PostgreSQL
 
@@ -124,6 +125,8 @@ release-blocking.
 | E2E-016-1 | FR-016 | Destructive-action dialog → delete → restore within window; archived hidden from defaults |
 | E2E-018-1 | FR-018 (P1) | Activity timeline page: feed, filter, pagination |
 | E2E-030-1 | FR-030 (P1) | Guided onboarding ≤ 3 steps, skippable, one-time |
+| E2E-031-1 | FR-031 (P1) | `/labels` page: one label per item with name + location path + category from the existing items API; print preview contains labels only (app chrome hidden); API failure → inline retry |
+| E2E-032-1 | FR-032 (P1) | `/search` page: last-10 query chips persist across reload and are removable (clear-all too); suggestion chips from recent items/locations run a search when tapped |
 
 **Supplemental E2E (defined here; TASK_BREAKDOWN names the flow, FRs did not cite an ID):**
 

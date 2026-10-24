@@ -67,8 +67,8 @@ function AuthGate({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3 text-muted-foreground">
           <Spinner className="size-6" />
-          <p className="text-dense" role="status">
-            Checking your session…
+          <p className="text-base" role="status">
+            Memeriksa sesi Anda…
           </p>
         </div>
       </div>

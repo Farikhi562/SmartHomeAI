@@ -21,9 +21,9 @@ const EnvSchema = z.object({
   DATABASE_URL: z.string().min(1).default("postgresql://smarthomeai:smarthomeai@localhost:5432/smarthomeai?schema=public"),
   DIRECT_URL: z.string().min(1).optional(),
 
-  // Auth (D5, ADR-005): "supabase" verifies Supabase Auth access tokens (HS256,
-  // SUPABASE_JWT_SECRET); "dev" enables the local email-only dev login (never
-  // allowed in production).
+  // Auth (D5, ADR-005): "supabase" verifies Supabase Auth access tokens using
+  // the project's JWKS (with legacy HS256/SUPABASE_JWT_SECRET compatibility);
+  // "dev" enables the local email-only dev login (never allowed in production).
   AUTH_MODE: z.enum(["dev", "supabase"]).default("dev"),
   AUTH_DEV_SECRET: z.string().min(16).default("dev-only-secret-change-me-0123456789"),
   SUPABASE_URL: optionalPlaceholder.refine((v) => v === undefined || /^https:\/\//.test(v), {
@@ -78,5 +78,5 @@ export function supabaseIssuer(): string {
 /** True when the runtime is configured for hosted Supabase Auth (D5 amended). */
 export function isSupabaseAuthConfigured(): boolean {
   const env = getEnv();
-  return env.AUTH_MODE === "supabase" && Boolean(env.SUPABASE_URL && env.SUPABASE_JWT_SECRET);
+  return env.AUTH_MODE === "supabase" && Boolean(env.SUPABASE_URL);
 }

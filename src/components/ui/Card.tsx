@@ -5,7 +5,7 @@ import { cx } from "@/lib/cx";
 export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cx("rounded-lg border border-border bg-card shadow-subtle", className)}
+      className={cx("rounded-lg border border-border bg-card", className)}
       {...props}
     />
   );

@@ -74,7 +74,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed bottom-4 right-4 z-[60] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-2">
+      <div className="pointer-events-none fixed bottom-24 right-4 z-[60] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-2 md:bottom-4 print:hidden">
         <div role="status" aria-live="polite" className="flex flex-col gap-2">
           {items
             .filter((item) => item.tone !== "error")
@@ -115,7 +115,7 @@ function ToastCard({ item, onDismiss }: { item: ToastItem; onDismiss: () => void
               onDismiss();
             }}
             className={cx(
-              "mt-2 rounded-md px-2 py-1 text-xs font-medium underline-offset-2 hover:underline",
+              "mt-2 flex min-h-11 items-center rounded-md px-2 text-dense font-medium underline-offset-2 hover:underline",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             )}
           >
@@ -126,13 +126,13 @@ function ToastCard({ item, onDismiss }: { item: ToastItem; onDismiss: () => void
       <button
         type="button"
         onClick={onDismiss}
-        aria-label="Dismiss notification"
+        aria-label="Tutup notifikasi"
         className={cx(
-          "rounded-md p-0.5 opacity-70 hover:opacity-100",
+          "-m-1.5 rounded-md p-1.5 opacity-70 hover:opacity-100",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         )}
       >
-        <X size={14} />
+        <X size={20} />
       </button>
     </div>
   );

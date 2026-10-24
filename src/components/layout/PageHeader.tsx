@@ -23,7 +23,7 @@ export function PageHeader({
   return (
     <div className={cx("mb-5", className)}>
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <nav aria-label="Breadcrumb" className="mb-2">
+        <nav aria-label="Jejak navigasi" className="mb-2">
           <ol className="flex flex-wrap items-center gap-1 text-dense text-muted-foreground">
             {breadcrumbs.map((crumb, index) => {
               const isLast = index === breadcrumbs.length - 1;
@@ -48,7 +48,7 @@ export function PageHeader({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-2xl font-bold text-foreground">{title}</h1>
-          {subtitle && <p className="mt-1 max-w-prose text-base text-muted-foreground">{subtitle}</p>}
+          {subtitle && <p className="mt-1 max-w-prose text-base text-foreground">{subtitle}</p>}
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </div>

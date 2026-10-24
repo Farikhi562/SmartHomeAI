@@ -39,10 +39,10 @@ export function EmptyState({
       )}
       <Heading className="text-lg font-semibold text-foreground">{title}</Heading>
       {description && (
-        <p className="max-w-prose text-base text-muted-foreground">{description}</p>
+        <p className="max-w-prose text-base text-foreground">{description}</p>
       )}
       {(action || secondaryAction) && (
-        <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
           {action}
           {secondaryAction}
         </div>

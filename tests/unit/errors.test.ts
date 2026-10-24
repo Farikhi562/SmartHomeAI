@@ -58,7 +58,7 @@ describe("toErrorPayload — ApiError mapping", () => {
   it("not found → 404 with a message naming the resource", () => {
     const { status, body } = payloadOf(errors.notFound("Item"));
     expect(status).toBe(404);
-    expect(body.error.message).toBe("Item not found.");
+    expect(body.error.message).toBe("Item tidak ditemukan.");
   });
 
   it("conflict → 409 with extra payload fields spread onto the envelope", () => {
@@ -74,7 +74,7 @@ describe("toErrorPayload — unknown errors never leak internals", () => {
     const { status, body } = payloadOf(new Error("boom: connection to postgres failed"));
     expect(status).toBe(500);
     expect(body.error.code).toBe("INTERNAL");
-    expect(body.error.message).toBe("Something went wrong on our end.");
+    expect(body.error.message).toBe("Terjadi kesalahan di sisi kami.");
   });
 
   it("the original message does not appear anywhere in the envelope", () => {

@@ -109,19 +109,26 @@
 | T-074 | Budget alarms + cost actuals vs COST_ESTIMATION assumptions | AwsInfra | T-070 | C-4 | Budget construct + updated doc | Alarm active; doc updated | todo |
 | T-075 | Release readiness: DoD checklists, CHANGELOG v1.0.0, prod deploy (human-approved) | Orch + Human | T-072…T-074 | PRD §17 | Release checklist | All PRD §17 boxes checked with evidence | todo |
 
-## P1 backlog (not scheduled; ordered by value)
+## P1 backlog (ordered by value; T-089…T-091 pulled into progress 2026-10-24)
 
-| ID | Task | Owner | Depends | FR | Verification |
-|---|---|---|---|---|---|
-| T-080 | Item aliases: schema applied, API + UI, retrieval integration | Back + Front | Phase 6 | FR-019 | IT-019-1, AIE-019 |
-| T-081 | Fuzzy-search tuning + "did you mean" | Back + QA | T-080 | FR-020 | IT-020-1, AIE-020 |
-| T-082 | Activity timeline page | Front | T-042 | FR-018 | IT/E2E-018 |
-| T-083 | Preferences UI (theme toggle, suggestions switch) | Front | T-024 | FR-021 | E2E theme persistence |
-| T-084 | Data export + account deletion (grace + purge job) | Back + Front | T-061 | FR-014, FR-022 | IT-014-1, IT-022-1 |
-| T-085 | Item images: presigned S3 upload, display, cleanup | Back + Front | T-070 | FR-025 | IT-025-1 |
-| T-086 | Guided onboarding flow | Front | T-043 | FR-030 | E2E-030-1 |
-| T-087 | First-party analytics events (privacy-limited, §15 PRD) | Back | T-054 | PRD §15 | Event schema tests |
-| T-088 | Retention jobs: 30-day item purge, audit 12-month trim | Back + AwsInfra | T-084 | BR-07/08 | Job dry-run report |
+*Decided 2026-10-24 (product owner): T-089…T-091 are the three features in active
+implementation; their status stays `todo` here until verification evidence is recorded
+(AGENT_SPEC §2.8 — no "done" without a recorded run).*
+
+| ID | Task | Owner | Depends | FR | Verification | Status |
+|---|---|---|---|---|---|---|
+| T-080 | Item aliases: schema applied, API + UI, retrieval integration | Back + Front | Phase 6 | FR-019 | IT-019-1, AIE-019 | todo |
+| T-081 | Fuzzy-search tuning + "did you mean" | Back + QA | T-080 | FR-020 | IT-020-1, AIE-020 | todo |
+| T-082 | Activity timeline page | Front | T-042 | FR-018 | IT/E2E-018 | todo |
+| T-083 | Preferences UI (theme toggle, suggestions switch) | Front | T-024 | FR-021 | E2E theme persistence | todo |
+| T-084 | Account deletion: settings flow + confirmation, 7-day grace + purge job (export offered first per FR-014; the export endpoint itself is tracked as T-089) | Back + Front | T-061 | FR-014 | IT-014-1 | todo |
+| T-085 | Item images: presigned S3 upload, display, cleanup | Back + Front | T-070 | FR-025 | IT-025-1 | todo |
+| T-086 | Guided onboarding flow | Front | T-043 | FR-030 | E2E-030-1 | todo |
+| T-087 | First-party analytics events (privacy-limited, §15 PRD) | Back | T-054 | PRD §15 | Event schema tests | todo |
+| T-088 | Retention jobs: 30-day item purge, audit 12-month trim | Back + AwsInfra | T-084 | BR-07/08 | Job dry-run report | todo |
+| T-089 | **Ekspor data (F1, in progress):** `GET /api/export` JSON file download — owner-scoped payload `{ items, locations, events, preferences, exportedAt }`, `Content-Disposition: attachment; filename="smarthomeai-ekspor-<date>.json"`, conversations excluded by default, `DATA_EXPORTED` audit event; existing session middleware, `ownerId` from verified token; Settings → Export trigger downloads the file (FR-022) | Back + Front | T-023, T-061 | FR-022 | `npm run typecheck` · `npm test` (IT-022-1 runs only with a DB; guarded skip otherwise) · manual: signed-in browser downloads `smarthomeai-ekspor-<date>.json` with `Content-Disposition: attachment`, payload keys exactly `{ items, locations, events, preferences, exportedAt }`, no conversations, `GET` without session → 401 | todo |
+| T-090 | **Label cetak (F2, in progress):** `/labels` page — printable labels (item name + location path + category) from existing `GET /api/items` / `GET /api/locations`, print-only CSS (app chrome excluded), linked from the UI navigation (FR-031) | Front | T-033, T-041 | FR-031 | `npm run typecheck` · `npm test` · manual: `/labels` lists labels for known items; browser print preview shows labels only (no sidebar/topbar/buttons); empty state with no items; items-API failure shows inline retry | todo |
+| T-091 | **Riwayat & saran pencarian (F3, in progress):** `/search` enhancements — last 10 queries as removable chips in `localStorage` (most-recent-first, deduped, clear-all) + quick suggestion chips from recent items/locations via existing APIs; purely client-side (FR-032) | Front | T-041 | FR-032 | `npm run typecheck` · `npm test` (UT-032-1) · manual: run >10 queries → exactly 10 chips remain, newest first; removing a chip survives reload; corrupt/absent `localStorage` degrades to empty history; suggestion chips render and run a search | todo |
 
 ## P2 (explicitly not planned)
 
@@ -152,3 +159,4 @@ Each requires a new ADR + PRD scope revision before any task is created.
 | `npm run build` (next build) | **PASSED** — exit 0: 26 API routes + 10 pages + middleware compiled; First Load JS shared 103 kB | 2026-10-22 |
 | `node tools/validate-docs.mjs` (re-run after API_SPEC harmonization) | **PASSED — ALL CHECKS PASSED** (62 files, 711 links, 23 Mermaid, 30 FRs / 18 P0, 52 AC, 29 US) | 2026-10-22 |
 | Not runnable in this environment (reported pending, **not** claimed green) | `prisma migrate dev` / seed / integration tests / e2e — require Postgres (no Docker; Supabase project not yet created) · live-Groq AIE run (T-056) — requires `GROQ_API_KEY`; guarded `describe.skip` in suite · CI workflow — no `.git`/remote yet (T-012) | 2026-10-22 |
+| `node tools/validate-docs.mjs` (re-run after the 2026-10-24 docs changes: FR-031/032, US-030/031, AC-031/032, T-089…T-091, export-payload alignment) | **PASSED — ALL CHECKS PASSED** (62 files, 714 relative links, 23 Mermaid, 32 FRs / 18 P0, 56 AC, 31 US, 0 warnings) | 2026-10-24 |

@@ -11,23 +11,23 @@ import { LogOut, Menu, Monitor, Moon, Search as SearchIcon, Settings, Sun, User 
 
 /** Route → page title (also written to `document.title` as "Page — SmartHomeAI"). */
 function titleFor(pathname: string): string {
-  if (pathname.startsWith("/inventory/new")) return "New item";
-  if (/^\/inventory\/[^/]+\/edit/.test(pathname)) return "Edit item";
-  if (/^\/inventory\/[^/]+/.test(pathname)) return "Item";
-  if (pathname.startsWith("/inventory")) return "Inventory";
-  if (pathname.startsWith("/dashboard")) return "Dashboard";
-  if (pathname.startsWith("/locations")) return "Locations";
-  if (pathname.startsWith("/search")) return "Search";
-  if (pathname.startsWith("/assistant")) return "Assistant";
-  if (pathname.startsWith("/activity")) return "Activity";
-  if (pathname.startsWith("/settings")) return "Settings";
+  if (pathname.startsWith("/inventory/new")) return "Barang baru";
+  if (/^\/inventory\/[^/]+\/edit/.test(pathname)) return "Ubah barang";
+  if (/^\/inventory\/[^/]+/.test(pathname)) return "Barang";
+  if (pathname.startsWith("/inventory")) return "Barang";
+  if (pathname.startsWith("/dashboard")) return "Beranda";
+  if (pathname.startsWith("/locations")) return "Lokasi";
+  if (pathname.startsWith("/search")) return "Cari";
+  if (pathname.startsWith("/assistant")) return "Asisten";
+  if (pathname.startsWith("/activity")) return "Riwayat";
+  if (pathname.startsWith("/settings")) return "Pengaturan";
   return "SmartHomeAI";
 }
 
 const THEME_OPTIONS: Array<{ value: Theme; label: string; icon: typeof Sun }> = [
-  { value: "LIGHT", label: "Light", icon: Sun },
-  { value: "DARK", label: "Dark", icon: Moon },
-  { value: "SYSTEM", label: "System", icon: Monitor },
+  { value: "LIGHT", label: "Terang", icon: Sun },
+  { value: "DARK", label: "Gelap", icon: Moon },
+  { value: "SYSTEM", label: "Sistem", icon: Monitor },
 ];
 
 export function Topbar({
@@ -91,47 +91,60 @@ export function Topbar({
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-card">
-      <div className="flex h-14 items-center gap-3 px-4 lg:px-6">
+      <div className="flex h-16 items-center gap-3 px-3 sm:px-4 lg:px-6">
         <button
           type="button"
           onClick={onMenu}
-          aria-label="Open navigation menu"
+          aria-label="Buka menu navigasi"
           className={cx(
-            "rounded-md p-2 text-foreground hover:bg-muted lg:hidden",
+            "shrink-0 rounded-md p-3 text-foreground hover:bg-muted lg:hidden",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           )}
         >
-          <Menu size={18} />
+          <Menu size={20} />
         </button>
 
+        {/* Brand + header search need ≥ 640 px to sit beside the settings entry. */}
         <Link
           href="/dashboard"
           className={cx(
-            "rounded-md text-base font-semibold tracking-tight text-foreground lg:hidden",
+            "hidden shrink-0 rounded-md text-base font-semibold tracking-tight text-foreground sm:inline",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
           )}
         >
           SmartHomeAI
         </Link>
 
-        <form role="search" onSubmit={submitSearch} className="relative min-w-0 flex-1 sm:max-w-md">
+        <form role="search" onSubmit={submitSearch} className="relative hidden min-w-0 flex-1 sm:block sm:max-w-md">
           <SearchIcon
-            size={16}
+            size={18}
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
           />
           <input
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            aria-label="Search items and locations"
-            placeholder="Search items and locations…"
+            aria-label="Cari barang dan lokasi"
+            placeholder="Cari barang dan lokasi…"
             className={cx(
-              "h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-base text-foreground",
+              "h-11 w-full rounded-md border border-input bg-background pl-10 pr-3 text-base text-foreground",
               "placeholder:text-muted-foreground",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             )}
           />
         </form>
+
+        <Link
+          href="/settings"
+          className={cx(
+            "ml-auto flex min-h-11 shrink-0 items-center gap-2 rounded-md px-2 text-base font-medium text-foreground hover:bg-muted",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            pathname.startsWith("/settings") && "bg-accent text-accent-foreground",
+          )}
+        >
+          <Settings size={18} className="shrink-0" />
+          <span>Pengaturan</span>
+        </Link>
 
         <div className="relative shrink-0" ref={menuRef}>
           <button
@@ -140,31 +153,31 @@ export function Topbar({
             onClick={() => setMenuOpen((open) => !open)}
             aria-haspopup="menu"
             aria-expanded={menuOpen}
-            aria-label={displayName ? `Account menu for ${displayName}` : "Account menu"}
+            aria-label={displayName ? `Menu akun ${displayName}` : "Menu akun"}
             className={cx(
-              "flex size-9 items-center justify-center rounded-full border border-border bg-secondary text-dense font-semibold text-secondary-foreground",
+              "flex size-11 items-center justify-center rounded-full border border-border bg-secondary text-dense font-semibold text-secondary-foreground",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             )}
           >
-            {displayName ? initials(displayName) : <User size={16} />}
+            {displayName ? initials(displayName) : <User size={18} />}
           </button>
 
           {menuOpen && (
             <div
               role="menu"
-              aria-label="Account"
+              aria-label="Akun"
               className="absolute right-0 top-full z-40 mt-2 w-64 rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-raised"
             >
               <div className="border-b border-border pb-3">
-                <p className="truncate text-dense font-medium">{displayName ?? "Signed in"}</p>
-                {user && <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">{user.email}</p>}
+                <p className="truncate text-dense font-medium">{displayName ?? "Sedang masuk"}</p>
+                {user && <p className="mt-0.5 truncate font-mono text-dense text-muted-foreground">{user.email}</p>}
               </div>
 
               <div className="border-b border-border py-3">
-                <p id="theme-label" className="mb-1.5 text-xs font-medium text-muted-foreground">
-                  Theme
+                <p id="theme-label" className="mb-1.5 text-dense font-medium text-foreground">
+                  Tema
                 </p>
-                <div role="radiogroup" aria-labelledby="theme-label" className="flex gap-1">
+                <div role="radiogroup" aria-labelledby="theme-label" className="flex gap-2">
                   {THEME_OPTIONS.map((option) => {
                     const Icon = option.icon;
                     const active = theme === option.value;
@@ -176,14 +189,14 @@ export function Topbar({
                         aria-checked={active}
                         onClick={() => setTheme(option.value)}
                         className={cx(
-                          "flex flex-1 items-center justify-center gap-1.5 rounded-md border px-2 py-1.5 text-xs font-medium",
+                          "flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-md border px-2 py-2 text-dense font-medium",
                           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                           active
-                            ? "border-primary bg-accent text-accent-foreground"
-                            : "border-border text-muted-foreground hover:bg-muted",
+                            ? "border-primary bg-accent font-semibold text-accent-foreground"
+                            : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
                         )}
                       >
-                        <Icon size={14} />
+                        <Icon size={16} />
                         {option.label}
                       </button>
                     );
@@ -197,12 +210,12 @@ export function Topbar({
                   role="menuitem"
                   onClick={() => setMenuOpen(false)}
                   className={cx(
-                    "flex items-center gap-2 rounded-md px-2 py-2 text-dense text-popover-foreground hover:bg-muted",
+                    "flex min-h-11 items-center gap-2 rounded-md px-2 py-2 text-base text-popover-foreground hover:bg-muted",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   )}
                 >
-                  <Settings size={16} />
-                  Settings
+                  <Settings size={18} />
+                  Pengaturan
                 </Link>
                 <button
                   type="button"
@@ -212,12 +225,12 @@ export function Topbar({
                     onSignOut();
                   }}
                   className={cx(
-                    "flex items-center gap-2 rounded-md px-2 py-2 text-dense text-destructive hover:bg-danger-surface",
+                    "flex min-h-11 items-center gap-2 rounded-md px-2 py-2 text-base font-medium text-destructive hover:bg-danger-surface",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   )}
                 >
-                  <LogOut size={16} />
-                  Sign out
+                  <LogOut size={18} />
+                  Keluar
                 </button>
               </div>
             </div>

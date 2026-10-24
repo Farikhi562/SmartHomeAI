@@ -141,7 +141,8 @@ depends on them.
 | `/inventory/:itemId/history` | Location history (§1.10) | required | `AppShell` | `limit, offset` | `GET /api/items/:id/events`, `POST /api/items/:id/events` |
 | `/locations` | Locations (§1.9) | required | `AppShell` | — | `GET/POST /api/locations` |
 | `/locations/:id` | Locations — detail panel (§1.9) | required | `AppShell` | — | `GET /api/locations`, `PATCH /api/locations/:id`, `POST /api/locations/:id/archive` |
-| `/search` | Search results (§1.11) | required | `AppShell` | `q` (required ≥ 2 chars), `type`, `limit`, `offset` | `GET /api/search` |
+| `/labels` | Print labels — FR-031 (DESIGN_SPEC §0.5, in progress) | required | `AppShell` (print-only CSS hides chrome) | — | `GET /api/items`, `GET /api/locations` |
+| `/search` | Search results (§1.11) | required | `AppShell` | `q` (required ≥ 2 chars), `type`, `limit`, `offset` | `GET /api/search`; suggestion chips from `GET /api/items`, `GET /api/locations` (FR-032), query history in `localStorage` (client-side) |
 | `/activity` | Activity (§1.12, P1) | required | `AppShell` | `type`, `limit`, `offset` | `GET /api/activity` |
 | `/settings` | Settings (§1.13) | required | `AppShell` | `tab?` | `GET/PATCH /api/me`, `GET/PATCH /api/preferences` |
 | `/settings/privacy` | Settings — privacy (§1.13) | required | `AppShell` | — | `GET /api/export` (P1), `DELETE /api/me` (P1) |

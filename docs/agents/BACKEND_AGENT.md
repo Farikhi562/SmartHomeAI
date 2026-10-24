@@ -26,7 +26,7 @@ append-only invariant of `item_location_events`. It delivers the API contract of
   local dev-DB migrations ✅.
 - Backend tasks: T-020, T-021, T-023, T-024, T-030, T-032, T-034, T-040, T-042, T-052, T-054,
   T-060, T-061; joint: T-015 (Frontend), T-036 (Frontend), T-062 (AwsInfra); P1: T-080, T-081,
-  T-084, T-085, T-087, T-088.
+  T-084, T-085, T-087, T-088, T-089 (joint, `GET /api/export`).
 
 **Out of scope**
 - `src/server/assistant/**` and `src/lib/providers/**` (AI role owns; 🔶 here only with joint

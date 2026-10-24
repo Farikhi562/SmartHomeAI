@@ -63,6 +63,16 @@ React Hook Form + Zod (all forms) · TanStack Table v8 (inventory table).
 **Metric rule:** any number shown must be derivable from stored data (FR-015.3). No invented
 vanity metrics, trend percentages, or "AI accuracy" figures anywhere in the UI.
 
+### 0.5 Bahasa antarmuka & added layout requirements (decided 2026-10-24, product owner)
+
+| Topic | Rule |
+|---|---|
+| **UI language** | All **user-visible copy** — page titles, buttons, labels, empty/error states, assistant UI chrome, print labels — is written in **Bahasa Indonesia**. Audience: family members, including elderly parents. **English is retained** for code identifiers, log output, documentation prose, and API error `code` fields (machine-readable, stable, never localized). This amends the English-only copy assumed by the page specs below: structure and behavior stay as specified, the strings are Indonesian. |
+| **Mobile bottom navigation** | On viewports < 1024 px the authenticated `AppShell` gains a persistent **bottom-navigation bar** with the primary destinations (dashboard, inventory, assistant, search, more) *in addition to* the top-bar `Sheet` drawer of §5.2 (amends §5.2); the bar hides on print and on auth/landing pages. |
+| **Elderly-friendly sizing** | Interactive targets ≥ **44 × 44 px** and base body text ≥ **16 px** on app surfaces (the 44 px rule already required by §5.2 / [ACCESSIBILITY.md](ACCESSIBILITY.md) is extended to text size); no tiny icon-only controls without accessible names. |
+| **Print labels page (`/labels`)** | A dedicated `/labels` route renders printable labels (item name + location path + category) from the existing items/locations API, with print-only CSS so application chrome never prints — FR-031 / US-030, **in progress** (decided 2026-10-24). |
+| **Search page extras (`/search`)** | The existing `/search` page (§1.11) additionally shows the last 10 queries as removable chips (browser `localStorage`) plus quick suggestion chips from recent items/locations — FR-032 / US-031, **in progress** (decided 2026-10-24); purely client-side, §1.11 behavior unchanged. |
+
 ---
 
 ## 1. Page specifications

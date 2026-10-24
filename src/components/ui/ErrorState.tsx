@@ -31,17 +31,17 @@ export function ErrorState({
     >
       <p className="flex items-center gap-2 text-base font-semibold text-destructive">
         <AlertTriangle size={16} />
-        {rateLimited ? "Too many requests" : "Something went wrong"}
+        {rateLimited ? "Terlalu banyak permintaan" : "Terjadi kesalahan"}
       </p>
       <p className="text-dense text-foreground">{apiError.message}</p>
       {rateLimited && apiError.retryAfterSec !== undefined && (
-        <p className="text-xs text-muted-foreground">
-          Try again in {apiError.retryAfterSec} second{apiError.retryAfterSec === 1 ? "" : "s"}.
+        <p className="text-dense text-muted-foreground">
+          Coba lagi dalam {apiError.retryAfterSec} detik.
         </p>
       )}
       {showRequestId && (
-        <p className="font-mono text-xs text-muted-foreground">
-          Request ID: {apiError.requestId}
+        <p className="font-mono text-dense text-muted-foreground">
+          ID permintaan: {apiError.requestId}
         </p>
       )}
       {onRetry && (
@@ -52,7 +52,7 @@ export function ErrorState({
           iconLeft={<RotateCcw size={14} />}
           className="mt-1"
         >
-          Retry
+          Coba lagi
         </Button>
       )}
     </div>

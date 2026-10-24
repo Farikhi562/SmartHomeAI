@@ -243,7 +243,10 @@ added only after T-004 approves the plan.
 
 ## 10. Notes
 
-1. **P1 backlog (T-080…T-088) is intentionally outside M-1…M-6.** P1 tasks start only after
+1. **P1 backlog (T-080…T-091) is intentionally outside M-1…M-6** — with one explicit
+   exception: T-089…T-091 (ekspor data, label cetak, riwayat & saran pencarian) were pulled
+   into active implementation by the product owner's decision of 2026-10-24 (the
+   "explicitly parallel from M-6, decided by Product" case). Remaining P1 tasks start only after
    M-6 exit (or explicitly parallel from M-6, decided by Product); new milestones (M-7+) are
    created then — IDs M-1…M-6 are never reused.
 2. **Evidence rule:** a milestone exits only when every listed exit criterion has *recorded*
