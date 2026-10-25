@@ -58,7 +58,10 @@ export function jsonOk(body: unknown, requestId: string, status = 200): NextResp
  */
 export function jsonError(err: unknown, requestId: string, route: string): NextResponse {
   const payload = toErrorPayload(err, requestId);
-  log.error({ requestId, route, errorCode: payload.body.error.code });
+  const causeType = err instanceof Error ? err.name : typeof err;
+  const causeCode =
+    err && typeof err === "object" && "code" in err && typeof err.code === "string" ? err.code : undefined;
+  log.error({ requestId, route, errorCode: payload.body.error.code, causeType, causeCode });
   const headers = new Headers({ "x-request-id": requestId });
   const retryAfter = payload.body.error.retryAfter;
   if (payload.body.error.code === "RATE_LIMITED" && typeof retryAfter === "number") {

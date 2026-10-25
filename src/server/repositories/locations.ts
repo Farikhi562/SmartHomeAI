@@ -92,12 +92,12 @@ export async function countChildren(ownerId: string, id: string, db: Db = prisma
 export async function countReferences(id: string): Promise<{ items: number; events: number }> {
   const rows = await prisma.$queryRaw<{ items: number; events: number }[]>`
     SELECT
-      (SELECT COUNT(*)::int FROM item_location_events ev WHERE ev.location_id = ${id}) AS events,
+      (SELECT COUNT(*)::int FROM item_location_events ev WHERE ev.location_id = ${id}::uuid) AS events,
       (
         SELECT COUNT(DISTINCT ev.item_id)::int
         FROM item_location_events ev
         JOIN items it ON it.id = ev.item_id
-        WHERE ev.location_id = ${id} AND it.deleted_at IS NULL
+        WHERE ev.location_id = ${id}::uuid AND it.deleted_at IS NULL
       ) AS items
   `;
   const row = rows[0];

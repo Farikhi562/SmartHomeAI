@@ -15,7 +15,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/Toast";
-import { Monitor, Moon, Sun } from "@/components/ui/icons";
+import { Download, Monitor, Moon, Sun } from "@/components/ui/icons";
 import { profileUpdateSchema, type PreferencesUpdate, type ProfileUpdate } from "@/lib/validation";
 import { cx } from "@/lib/cx";
 
@@ -50,7 +50,7 @@ export default function SettingsPage() {
     <>
       <PageHeader title="Pengaturan" subtitle="Akun, preferensi, dan data Anda." />
 
-      <div role="tablist" aria-label="Bagian pengaturan" className="mb-5 flex flex-wrap gap-1 border-b border-border">
+      <div role="tablist" aria-label="Bagian pengaturan" className="mb-5 flex flex-wrap gap-3 border-b border-border">
         {TABS.map((option) => (
           <button
             key={option.value}
@@ -295,7 +295,40 @@ function PreferencesPanel() {
 }
 
 function PrivacyPanel() {
+  const { toast } = useToast();
   const meState = useAsync(() => api.me(), []);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  /**
+   * FR-022: fetch the owner's export as a file download, then hand it to the
+   * browser. The object URL is revoked once the download has started.
+   */
+  const downloadExport = async () => {
+    setExporting(true);
+    setExportError(null);
+    let objectUrl: string | null = null;
+    try {
+      const file = await api.exportData();
+      objectUrl = URL.createObjectURL(file.blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = file.filename;
+      link.rel = "noopener";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast({ title: "Ekspor diunduh", description: file.filename, tone: "success" });
+    } catch (error) {
+      setExportError(toApiError(error).message);
+    } finally {
+      setExporting(false);
+      // Revoke only once the browser has had time to start the download;
+      // revoking synchronously can cancel it in Safari/Firefox.
+      const pendingUrl = objectUrl;
+      if (pendingUrl) window.setTimeout(() => URL.revokeObjectURL(pendingUrl), 1500);
+    }
+  };
 
   return (
     <div className="flex max-w-[720px] flex-col gap-5">
@@ -343,17 +376,28 @@ function PrivacyPanel() {
         </CardHeader>
         <CardContent className="flex flex-col gap-3 text-base text-foreground">
           <p>
-            Anda bisa mengunduh semua yang telah dicatat dalam format JSON — barang, lokasi, riwayat,
-            dan preferensi. Isi percakapan tidak disertakan agar ekspor tetap ringkas.
+            Anda bisa mengunduh semua yang telah dicatat dalam format JSON — barang, lokasi, riwayat
+            tempat, dan preferensi. Isi percakapan <strong>tidak disertakan secara bawaan</strong>{" "}
+            agar ekspor tetap ringkas dan minim data pribadi.
           </p>
-          <p className="text-dense text-muted-foreground">
-            Ekspor belum tersedia di versi ini.
-          </p>
+          {exportError && (
+            <p role="alert" className="rounded-md border border-destructive/40 bg-danger-surface p-3 text-dense text-destructive">
+              {exportError}
+            </p>
+          )}
           <div>
-            <Button variant="secondary" disabled>
-              Ekspor data (segera hadir)
+            <Button
+              variant="secondary"
+              onClick={() => void downloadExport()}
+              loading={exporting}
+              iconLeft={<Download size={16} />}
+            >
+              Ekspor data
             </Button>
           </div>
+          <p className="text-dense text-muted-foreground">
+            Tunggu sebentar — berkas akan tersimpan di perangkat Anda.
+          </p>
         </CardContent>
       </Card>
 

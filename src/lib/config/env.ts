@@ -33,7 +33,7 @@ const EnvSchema = z.object({
   SUPABASE_JWT_SECRET: optionalPlaceholder,
 
   GROQ_API_KEY: optionalPlaceholder,
-  GROQ_MODEL: z.string().default("llama-3.3-70b-versatile"),
+  GROQ_MODEL: z.string().default("openai/gpt-oss-120b"),
   GROQ_TIMEOUT_MS: z.coerce.number().int().positive().default(15_000),
   GROQ_MAX_RETRIES: z.coerce.number().int().min(0).max(5).default(2),
   GROQ_MAX_OUTPUT_TOKENS: z.coerce.number().int().positive().default(1024),

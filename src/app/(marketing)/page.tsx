@@ -3,37 +3,37 @@ import { CheckCircle, MapPin, Search, ShieldCheck, Sparkles } from "@/components
 import { cx } from "@/lib/cx";
 
 const linkButtonBase =
-  "inline-flex h-10 items-center rounded-md px-5 text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+  "inline-flex min-h-11 items-center rounded-md px-5 text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
 const VALUE_PROPS = [
   {
     icon: MapPin,
-    title: "Record in seconds",
-    body: "Note where you put an item the moment you put it there — manually or by telling the assistant.",
+    title: "Catat dalam hitungan detik",
+    body: "Tulis di mana Anda menaruh barang begitu Anda meletakkannya — lewat ketik, atau dengan memberi tahu asisten.",
   },
   {
     icon: Search,
-    title: "Ask in plain language",
-    body: "“Where did I last put my motorcycle keys?” Answers come only from records you created.",
+    title: "Tanyakan dengan bahasa sehari-hari",
+    body: "“Di mana saya terakhir menaruh kunci motor?” Jawaban diambil hanya dari catatan yang Anda buat sendiri.",
   },
   {
     icon: CheckCircle,
-    title: "Honest about uncertainty",
-    body: "Every answer links its source records and says “last recorded — it may have moved since”.",
+    title: "Jujur soal ketidakpastian",
+    body: "Setiap jawaban menautkan catatan sumbernya dan menyebut “terakhir dicatat — bisa jadi sudah dipindahkan”.",
   },
   {
     icon: ShieldCheck,
-    title: "Private by default",
-    body: "One owner per account with server-side isolation on every operation. Export or delete anytime.",
+    title: "Privat sejak awal",
+    body: "Satu pemilik untuk satu akun, dengan pemisahan data di sisi server pada setiap operasi. Bisa diekspor atau dihapus kapan saja.",
   },
 ];
 
 const PRINCIPLES = [
-  "Recorded facts, not guesses",
-  "Honesty about uncertainty",
-  "The dashboard is the product",
-  "Private by default",
-  "Graceful degradation",
+  "Fakta yang dicatat, bukan tebakan",
+  "Jujur soal ketidakpastian",
+  "Dasbor adalah inti produk",
+  "Privat sejak awal",
+  "Tetap berfungsi saat ada gangguan",
 ];
 
 /** Landing page (DESIGN_SPEC §1.1) — static, no client fetch. */
@@ -43,34 +43,35 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="border-b border-border bg-background">
         <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-          <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
+          <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-dense font-medium text-muted-foreground">
             <Sparkles size={14} aria-hidden="true" />
-            Personal belongings memory
+            Ingatan pribadi untuk barang-barang Anda
           </p>
           <h1 className="max-w-2xl text-3xl font-bold leading-9 text-foreground">
-            Remember where you last put things.
+            Ingat di mana Anda terakhir menaruh barang.
           </h1>
           <p className="mt-4 max-w-prose text-lg text-muted-foreground">
-            SmartHomeAI is a memory and record system, not a tracker. You record where you place
-            everyday items; the assistant answers questions from those records — with the location,
-            the time, and an honest caveat.
+            SmartHomeAI adalah sistem ingatan dan catatan, bukan alat pemantau. Anda mencatat di
+            mana Anda menaruh barang sehari-hari; asisten menjawab pertanyaan dari catatan itu —
+            lengkap dengan lokasinya, waktunya, dan peringatan jujur bila barangnya mungkin sudah
+            berpindah.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
               href="/login"
               className={cx(linkButtonBase, "bg-primary text-primary-foreground hover:bg-primary-hover")}
             >
-              Sign in to get started
+              Masuk untuk memulai
             </Link>
             <a
               href="#how-it-works"
               className={cx(linkButtonBase, "border border-border-strong bg-card text-foreground hover:bg-muted")}
             >
-              How it works
+              Cara kerjanya
             </a>
           </div>
-          <p className="mt-4 text-xs text-muted-foreground">
-            Development preview: sign-in accepts any e-mail until Amazon Cognito is wired up (D5).
+          <p className="mt-4 text-dense text-muted-foreground">
+            Pratinjau pengembangan: untuk sementara, Anda bisa masuk dengan surel apa pun.
           </p>
         </div>
       </section>
@@ -83,7 +84,7 @@ export default function LandingPage() {
               <span className="size-2.5 rounded-full bg-border-strong" />
               <span className="size-2.5 rounded-full bg-border-strong" />
               <span className="size-2.5 rounded-full bg-border-strong" />
-              <span className="ml-3 text-xs text-muted-foreground">Dashboard</span>
+              <span className="ml-3 text-xs text-muted-foreground">Beranda</span>
             </div>
             <div className="grid gap-3 p-4 sm:grid-cols-4">
               {[0, 1, 2, 3].map((index) => (
@@ -99,7 +100,7 @@ export default function LandingPage() {
       {/* Value props */}
       <section id="how-it-works" className="border-b border-border bg-background">
         <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
-          <h2 className="text-2xl font-bold text-foreground">How it helps</h2>
+          <h2 className="text-2xl font-bold text-foreground">Bagaimana aplikasi ini membantu</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {VALUE_PROPS.map((prop) => {
               const Icon = prop.icon;
@@ -123,8 +124,10 @@ export default function LandingPage() {
       {/* Principles strip */}
       <section className="border-b border-border bg-card">
         <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
-          <h2 className="text-base font-semibold text-foreground">Built on five product principles</h2>
-          <ul className="mt-4 flex flex-wrap gap-2">
+          <h2 className="text-base font-semibold text-foreground">
+            Dibangun atas lima prinsip produk
+          </h2>
+          <ul className="mt-4 flex flex-wrap gap-3">
             {PRINCIPLES.map((principle) => (
               <li
                 key={principle}
@@ -140,16 +143,17 @@ export default function LandingPage() {
       {/* Closing CTA */}
       <section className="bg-background">
         <div className="mx-auto w-full max-w-6xl px-4 py-16 text-center sm:px-6">
-          <h2 className="text-2xl font-bold text-foreground">Start your own record</h2>
+          <h2 className="text-2xl font-bold text-foreground">Mulai catatan Anda sendiri</h2>
           <p className="mx-auto mt-2 max-w-prose text-base text-muted-foreground">
-            Add a location, record your first item, and ask the assistant where you left it.
+            Tambahkan satu lokasi, catat barang pertama Anda, lalu tanyakan ke asisten di mana Anda
+            meletakkannya.
           </p>
           <div className="mt-6 flex justify-center">
             <Link
               href="/login"
               className={cx(linkButtonBase, "bg-primary text-primary-foreground hover:bg-primary-hover")}
             >
-              Sign in
+              Masuk
             </Link>
           </div>
         </div>

@@ -367,6 +367,11 @@ export async function runAssistant(
       event: "assistant.pipeline_failed",
       intent,
       errorCode: err instanceof ApiError ? err.code : "PROVIDER_ERROR",
+      causeType: err instanceof Error ? err.name : typeof err,
+      providerStatus:
+        err && typeof err === "object" && "status" in err && typeof err.status === "number"
+          ? err.status
+          : undefined,
       ownerIdHash: hashOwner(ownerId),
     });
     const fallback = await buildFallback(ownerId, message);

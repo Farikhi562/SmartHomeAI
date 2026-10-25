@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   List,
   MapPin,
+  Printer,
   Search as SearchIcon,
   Settings,
   Sparkles,
@@ -26,6 +27,9 @@ export type NavItem = { label: string; href: string; icon: ComponentType<IconPro
 export const NAV_ITEMS: NavItem[] = [
   { label: "Beranda", href: "/dashboard", icon: LayoutDashboard },
   { label: "Barang", href: "/inventory", icon: Box },
+  // Label cetak (FR-031): sidebar + inventory toolbar entry only — the mobile
+  // bottom bar keeps its five tabs (no room for a sixth).
+  { label: "Cetak label", href: "/labels", icon: Printer },
   { label: "Lokasi", href: "/locations", icon: MapPin },
   { label: "Cari", href: "/search", icon: SearchIcon },
   { label: "Asisten", href: "/assistant", icon: Sparkles },
@@ -61,7 +65,8 @@ export function Sidebar({
       </div>
 
       <nav aria-label="Navigasi utama" className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
-        <ul className="flex flex-col gap-2">
+        {/* gap-3 = 12.5 px: neighbouring nav targets stay ≥12 px apart. */}
+        <ul className="flex flex-col gap-3">
           {NAV_ITEMS.map((item) => {
             const active = isNavActive(pathname, item.href);
             const Icon = item.icon;

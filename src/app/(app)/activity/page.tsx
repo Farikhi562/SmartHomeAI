@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Pagination } from "@/components/ui/Pagination";
 import { SkeletonRows } from "@/components/ui/Skeleton";
-import { History, MapPin, Pencil, Sparkles } from "@/components/ui/icons";
+import { History, MapPin, Package, Pencil, Sparkles } from "@/components/ui/icons";
 import { formatDateTime, formatRelativeTime, toDateTimeAttr } from "@/lib/format";
 import { cx } from "@/lib/cx";
 
@@ -36,10 +36,10 @@ export default function ActivityPage() {
 function ActivitySkeleton() {
   return (
     <>
-      <PageHeader title="Activity" />
+      <PageHeader title="Riwayat" />
       <SkeletonRows rows={8} />
       <span role="status" className="sr-only">
-        Loading activity
+        Memuat riwayat…
       </span>
     </>
   );
@@ -66,8 +66,8 @@ function ActivityView() {
   return (
     <>
       <PageHeader
-        title="Activity"
-        subtitle={`Everything recorded in the last ${WINDOW_DAYS} days, newest first.`}
+        title="Riwayat"
+        subtitle={`Semua yang dicatat dalam ${WINDOW_DAYS} hari terakhir, yang terbaru di urutan paling atas.`}
       />
 
       {state.error && <ErrorState error={state.error} onRetry={state.reload} className="mb-4" />}
@@ -77,17 +77,18 @@ function ActivityView() {
         <EmptyState
           headingLevel={2}
           icon={<History size={32} />}
-          title={`Nothing in the last ${WINDOW_DAYS} days`}
-          description="When you record where you put something, it shows up here."
+          title={`Belum ada catatan dalam ${WINDOW_DAYS} hari terakhir`}
+          description="Saat Anda mencatat di mana Anda menaruh sesuatu, catatannya akan muncul di sini."
           action={
             <Link
               href="/inventory"
               className={cx(
-                "inline-flex h-9 items-center rounded-md bg-primary px-4 text-base font-medium text-primary-foreground hover:bg-primary-hover",
+                "inline-flex min-h-11 items-center gap-2 rounded-md bg-primary px-5 text-base font-medium text-primary-foreground hover:bg-primary-hover",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               )}
             >
-              Go to inventory
+              <Package size={18} aria-hidden="true" />
+              Buka daftar barang
             </Link>
           }
         />
@@ -96,7 +97,7 @@ function ActivityView() {
       {!state.loading && !state.error && events.length > 0 && (
         <>
           <p className="mb-3 text-dense text-muted-foreground" aria-live="polite">
-            {total} event{total === 1 ? "" : "s"}
+            {total} catatan
           </p>
           <ol className="relative flex flex-col gap-4 border-l border-border pl-5">
             {events.map((event) => (
@@ -129,14 +130,14 @@ function ActivityRow({ event }: { event: EventDto }) {
             <Link
               href={`/inventory/${event.item.id}#event-${event.id}`}
               className={cx(
-                "text-dense font-semibold text-foreground underline-offset-4 hover:underline",
+                "inline-flex min-h-11 items-center text-dense font-semibold text-foreground underline-offset-4 hover:underline",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm",
               )}
             >
               {event.item.name}
             </Link>
           ) : (
-            <span className="text-dense font-semibold text-foreground">An item</span>
+            <span className="text-dense font-semibold text-foreground">Sebuah barang</span>
           )}
           <span aria-hidden="true" className="text-muted-foreground">
             →
@@ -147,17 +148,17 @@ function ActivityRow({ event }: { event: EventDto }) {
           </span>
           <Badge tone={event.source === "ASSISTANT" ? "info" : "muted"}>
             {event.source === "ASSISTANT" ? <Sparkles size={11} /> : <Pencil size={11} />}
-            {event.source === "ASSISTANT" ? "Assistant" : "Manual"}
+            {event.source === "ASSISTANT" ? "Asisten" : "Manual"}
           </Badge>
-          {event.confidence === "INFERRED" && <Badge tone="warning">Inferred</Badge>}
+          {event.confidence === "INFERRED" && <Badge tone="warning">Disimpulkan</Badge>}
         </div>
         <p className="mt-1 text-xs text-muted-foreground">
           <time dateTime={toDateTimeAttr(event.occurredAt)} title={formatDateTime(event.occurredAt)}>
-            Placed {formatDateTime(event.occurredAt)}
+            Diletakkan {formatDateTime(event.occurredAt)}
           </time>
           {" · "}
           <time dateTime={toDateTimeAttr(event.recordedAt)} title={formatDateTime(event.recordedAt)}>
-            recorded {formatRelativeTime(event.recordedAt)}
+            dicatat {formatRelativeTime(event.recordedAt)}
           </time>
         </p>
         {event.note && <p className="mt-1 text-dense text-muted-foreground">{event.note}</p>}

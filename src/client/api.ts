@@ -105,6 +105,9 @@ export type SearchResponse = {
 };
 export type ActivityResponse = { events: EventDto[]; pagination: Pagination };
 
+/** FR-022 file download: the raw export payload as a Blob plus its save-as name. */
+export type ExportFile = { blob: Blob; filename: string };
+
 export type MessageRole = "USER" | "ASSISTANT";
 export type ReplyStatus = "COMPLETE" | "PENDING_ACTION" | "FALLBACK" | "ERROR";
 
@@ -244,10 +247,12 @@ function asCode(value: unknown): ApiErrorCode {
 export function toApiError(err: unknown): ApiError {
   if (err instanceof ApiError) return err;
   if (err instanceof DOMException && err.name === "AbortError") {
-    return new ApiError({ code: "INTERNAL", message: "Request cancelled.", status: 0 });
+    return new ApiError({ code: "INTERNAL", message: "Permintaan dibatalkan.", status: 0 });
   }
   const message =
-    err instanceof Error && err.message ? err.message : "Something went wrong. Check your connection.";
+    err instanceof Error && err.message
+      ? err.message
+      : "Terjadi kesalahan. Periksa koneksi internet Anda lalu coba lagi.";
   return new ApiError({ code: "INTERNAL", message, status: 0 });
 }
 
@@ -314,6 +319,25 @@ function asArray<T>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
 }
 
+/** The `<date>` (YYYY-MM-DD) used in the export filename, from the server clock. */
+function todayStamp(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/**
+ * Pull the save-as name out of `Content-Disposition: attachment; filename="…"`.
+ * Falls back to the documented `smarthomeai-ekspor-<date>.json` shape (API_SPEC
+ * §3.7) when the header is absent or unparseable, so the download always has a
+ * usable name.
+ */
+function exportFilename(contentDisposition: string | null): string {
+  const fallback = `smarthomeai-ekspor-${todayStamp()}.json`;
+  if (!contentDisposition) return fallback;
+  const match = /filename="?([^";]+)"?/i.exec(contentDisposition);
+  const name = match?.[1]?.trim();
+  return name ? name : fallback;
+}
+
 /** Legal `unknown` → DTO cast (response shapes are normalized, never assumed). */
 function asDto<T>(value: unknown): T {
   return value as T;
@@ -372,6 +396,60 @@ async function parseBody(res: Response): Promise<unknown> {
   }
 }
 
+/**
+ * Non-2xx → typed `ApiError` (error envelope, API_SPEC §2). Shared by the
+ * normal request path and the file-download path (`exportData`), so both map
+ * codes/details/requestId/Retry-After identically.
+ */
+async function errorFromResponse(res: Response): Promise<ApiError> {
+  const parsed = record(await parseBody(res));
+  const err = record(parsed?.error);
+  const retryAfterHeader = res.headers.get("retry-after");
+  const fallbackRec = record(err?.fallback);
+  const details = asArray<unknown>(err?.details)
+    .map((d) => {
+      const rec = record(d);
+      if (!rec) return null;
+      const pathValue = typeof rec.path === "string" ? rec.path : "";
+      const issue = typeof rec.issue === "string" ? rec.issue : "";
+      return pathValue && issue ? { path: pathValue, issue } : null;
+    })
+    .filter((d): d is ApiErrorDetail => d !== null);
+
+  const extra: Record<string, unknown> = {};
+  if (err) {
+    for (const [key, value] of Object.entries(err)) {
+      if (!["code", "message", "details", "requestId"].includes(key)) extra[key] = value;
+    }
+  }
+
+  return new ApiError({
+    code: asCode(err?.code),
+    message:
+      typeof err?.message === "string" && err.message
+        ? err.message
+        : res.status === 401
+          ? "Sesi Anda telah berakhir. Silakan masuk kembali."
+          : "Terjadi kesalahan. Silakan coba lagi.",
+    status: res.status,
+    details: details.length > 0 ? details : undefined,
+    requestId: typeof err?.requestId === "string" ? err.requestId : (res.headers.get("x-request-id") ?? undefined),
+    retryAfterSec:
+      typeof err?.retryAfter === "number"
+        ? err.retryAfter
+        : retryAfterHeader !== null && !Number.isNaN(Number(retryAfterHeader))
+          ? Number(retryAfterHeader)
+          : undefined,
+    fallback: fallbackRec
+      ? {
+          searchQuery: typeof fallbackRec.searchQuery === "string" ? fallbackRec.searchQuery : undefined,
+          results: asArray<FallbackResult>(fallbackRec.results),
+        }
+      : undefined,
+    extra,
+  });
+}
+
 export class ApiClient {
   /** Raw request — never call this outside this module. */
   private async request<T>(path: string, init: RequestOptions = {}): Promise<T> {
@@ -395,7 +473,7 @@ export class ApiClient {
       } catch {
         throw new ApiError({
           code: "INTERNAL",
-          message: "We couldn't reach the server. Check your connection and try again.",
+          message: "Tidak dapat terhubung ke server. Periksa koneksi internet Anda lalu coba lagi.",
           status: 0,
         });
       }
@@ -410,53 +488,7 @@ export class ApiClient {
     }
 
     if (!res.ok) {
-      const parsed = record(await parseBody(res));
-      const err = record(parsed?.error);
-      const retryAfterHeader = res.headers.get("retry-after");
-      const fallbackRec = record(err?.fallback);
-      const details = asArray<unknown>(err?.details)
-        .map((d) => {
-          const rec = record(d);
-          if (!rec) return null;
-          const pathValue = typeof rec.path === "string" ? rec.path : "";
-          const issue = typeof rec.issue === "string" ? rec.issue : "";
-          return pathValue && issue ? { path: pathValue, issue } : null;
-        })
-        .filter((d): d is ApiErrorDetail => d !== null);
-
-      const extra: Record<string, unknown> = {};
-      if (err) {
-        for (const [key, value] of Object.entries(err)) {
-          if (!["code", "message", "details", "requestId"].includes(key)) extra[key] = value;
-        }
-      }
-
-      const apiError = new ApiError({
-        code: asCode(err?.code),
-        message:
-          typeof err?.message === "string" && err.message
-            ? err.message
-            : res.status === 401
-              ? "Your session has expired. Please sign in again."
-              : "Something went wrong. Please try again.",
-        status: res.status,
-        details: details.length > 0 ? details : undefined,
-        requestId: typeof err?.requestId === "string" ? err.requestId : (res.headers.get("x-request-id") ?? undefined),
-        retryAfterSec:
-          typeof err?.retryAfter === "number"
-            ? err.retryAfter
-            : retryAfterHeader !== null && !Number.isNaN(Number(retryAfterHeader))
-              ? Number(retryAfterHeader)
-              : undefined,
-        fallback: fallbackRec
-          ? {
-              searchQuery: typeof fallbackRec.searchQuery === "string" ? fallbackRec.searchQuery : undefined,
-              results: asArray<FallbackResult>(fallbackRec.results),
-            }
-          : undefined,
-        extra,
-      });
-
+      const apiError = await errorFromResponse(res);
       // GET = page load: redirect to sign-in. Mutations rethrow for inline display.
       if (apiError.code === "UNAUTHENTICATED" && (method === "GET" || method === "HEAD")) {
         handleUnauthorized();
@@ -470,7 +502,7 @@ export class ApiClient {
     try {
       return JSON.parse(text) as T;
     } catch {
-      throw new ApiError({ code: "INTERNAL", message: "The server returned an unreadable response.", status: res.status });
+      throw new ApiError({ code: "INTERNAL", message: "Server mengembalikan respons yang tidak terbaca.", status: res.status });
     }
   }
 
@@ -593,8 +625,8 @@ export class ApiClient {
             typeof rec.message === "string" && rec.message
               ? rec.message
               : code === "DUPLICATE_NAME"
-                ? "An item with a similar name already exists."
-                : "Saved with a warning.";
+                ? "Barang dengan nama serupa sudah ada."
+                : "Tersimpan dengan peringatan.";
           return { code, message } satisfies ItemWarning;
         })
         .filter((w): w is ItemWarning => w !== null);
@@ -680,6 +712,51 @@ export class ApiClient {
       return this.request<void>(`/api/locations/${id}`, { method: "DELETE" });
     },
   };
+
+  // ── Export (FR-022) ─────────────────────────────────────────────────────
+
+  /**
+   * Download the owner's data export (FR-022, API_SPEC §3.7). Unlike every
+   * other call, `GET /api/export` answers the raw payload as a file download
+   * (`Content-Disposition: attachment`) — the documented exception to the
+   * `{ data, requestId }` envelope — so this returns the download's Blob plus
+   * the server-provided filename instead of parsing a JSON envelope.
+   */
+  async exportData(): Promise<ExportFile> {
+    const url = "/api/export";
+    const send = (): Promise<Response> =>
+      fetch(url, { method: "GET", credentials: "include", headers: { Accept: "application/json" } });
+
+    let res: Response;
+    try {
+      res = await send();
+      // Same single silent-refresh-and-retry as the normal request path.
+      if (res.status === 401 && (await tryRefreshSession())) res = await send();
+    } catch {
+      throw new ApiError({
+        code: "INTERNAL",
+        message: "Tidak dapat terhubung ke server. Periksa koneksi internet Anda lalu coba lagi.",
+        status: 0,
+      });
+    }
+
+    if (!res.ok) {
+      // Non-2xx still uses the standard error envelope (API_SPEC §2).
+      const apiError = await errorFromResponse(res);
+      if (apiError.code === "UNAUTHENTICATED") handleUnauthorized();
+      throw apiError;
+    }
+
+    try {
+      return { blob: await res.blob(), filename: exportFilename(res.headers.get("content-disposition")) };
+    } catch {
+      throw new ApiError({
+        code: "INTERNAL",
+        message: "Berkas ekspor tidak dapat dibaca. Silakan coba lagi.",
+        status: res.status,
+      });
+    }
+  }
 
   // ── Search & activity ───────────────────────────────────────────────────
 

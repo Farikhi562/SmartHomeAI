@@ -17,7 +17,7 @@ import { Pagination } from "@/components/ui/Pagination";
 import { SkeletonRows } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/Toast";
 import {
-  Archive, Box, CircleDashed, MapPin, Pencil, Plus, RotateCcw, Search as SearchIcon, Trash,
+  Archive, Box, CircleDashed, MapPin, Pencil, Plus, Printer, RotateCcw, Search as SearchIcon, Trash,
 } from "@/components/ui/icons";
 import { formatDateTime, formatRelativeTime, toDateTimeAttr, truncate } from "@/lib/format";
 import { cx } from "@/lib/cx";
@@ -265,16 +265,28 @@ function InventoryView() {
         title="Barang"
         subtitle="Semua barang yang Anda catat, lengkap dengan tempat terakhir disimpan."
         actions={
-          <Link
-            href="/inventory/new"
-            className={cx(
-              "inline-flex min-h-11 items-center gap-2 rounded-md bg-primary px-4 text-lg font-medium text-primary-foreground hover:bg-primary-hover",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-            )}
-          >
-            <Plus size={16} aria-hidden="true" />
-            Tambah barang
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/labels"
+              className={cx(
+                "inline-flex min-h-11 items-center gap-2 rounded-md border border-border-strong bg-secondary px-4 text-lg font-medium text-secondary-foreground hover:bg-muted",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              )}
+            >
+              <Printer size={16} aria-hidden="true" />
+              Cetak label
+            </Link>
+            <Link
+              href="/inventory/new"
+              className={cx(
+                "inline-flex min-h-11 items-center gap-2 rounded-md bg-primary px-4 text-lg font-medium text-primary-foreground hover:bg-primary-hover",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              )}
+            >
+              <Plus size={16} aria-hidden="true" />
+              Tambah barang
+            </Link>
+          </div>
         }
       />
 

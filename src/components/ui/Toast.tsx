@@ -74,15 +74,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed bottom-24 right-4 z-[60] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-2 md:bottom-4 print:hidden">
-        <div role="status" aria-live="polite" className="flex flex-col gap-2">
+      <div className="pointer-events-none fixed bottom-24 right-4 z-[60] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-3 md:bottom-4 print:hidden">
+        <div role="status" aria-live="polite" className="flex flex-col gap-3">
           {items
             .filter((item) => item.tone !== "error")
             .map((item) => (
               <ToastCard key={item.id} item={item} onDismiss={() => dismiss(item.id)} />
             ))}
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           {items
             .filter((item) => item.tone === "error")
             .map((item) => (

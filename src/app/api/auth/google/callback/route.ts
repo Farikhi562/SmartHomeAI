@@ -1,4 +1,3 @@
-import { timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { errors } from "@/lib/errors";
@@ -14,7 +13,6 @@ import { getEnv } from "@/lib/config/env";
 import { upsertUser } from "@/server/repositories/users";
 
 const VERIFIER_COOKIE = "shai_google_verifier";
-const STATE_COOKIE = "shai_google_state";
 const NEXT_COOKIE = "shai_google_next";
 
 function safeNext(value: string | undefined): string {
@@ -22,7 +20,7 @@ function safeNext(value: string | undefined): string {
 }
 
 function clearOAuthCookies(response: NextResponse): void {
-  for (const name of [VERIFIER_COOKIE, STATE_COOKIE, NEXT_COOKIE]) {
+  for (const name of [VERIFIER_COOKIE, NEXT_COOKIE]) {
     response.cookies.set(name, "", {
       httpOnly: true,
       sameSite: "lax",
@@ -50,17 +48,9 @@ export async function GET(req: Request): Promise<Response> {
   if (oauthError) return loginRedirect(req, next, "google_cancelled");
 
   const code = requestUrl.searchParams.get("code");
-  const returnedState = requestUrl.searchParams.get("state");
-  const expectedState = store.get(STATE_COOKIE)?.value;
   const verifier = store.get(VERIFIER_COOKIE)?.value;
-  if (!code || !returnedState || !expectedState || !verifier) {
+  if (!code || !verifier) {
     return loginRedirect(req, next, "google_session_expired");
-  }
-
-  const expected = Buffer.from(expectedState);
-  const actual = Buffer.from(returnedState);
-  if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
-    return loginRedirect(req, next, "google_invalid_state");
   }
 
   try {
@@ -69,7 +59,7 @@ export async function GET(req: Request): Promise<Response> {
     const user = await verifyAccessToken(tokens.accessToken);
     await upsertUser({ id: user.id, email: user.email });
 
-    const response = loginRedirect(req, next);
+    const response = NextResponse.redirect(new URL(next, requestUrl.origin));
     response.cookies.set(SESSION_COOKIE, tokens.accessToken, sessionCookieOptions(tokens.expiresIn));
     response.cookies.set(REFRESH_COOKIE, tokens.refreshToken, refreshCookieOptions());
     clearOAuthCookies(response);

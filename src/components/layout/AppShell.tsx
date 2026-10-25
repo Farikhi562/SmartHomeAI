@@ -39,7 +39,7 @@ export function AppShell({
 
   return (
     <div className="min-h-screen bg-background">
-      <a href="#main" className="skip-link">
+      <a href="#main" className="skip-link print:hidden">
         Lewati ke konten utama
       </a>
 

@@ -2,8 +2,15 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useMemo, useState, type FormEvent } from "react";
 import { api, type SearchResponse } from "@/client/api";
+import {
+  clearHistory,
+  readHistory,
+  removeFromHistory,
+  saveQuery,
+  writeHistory,
+} from "@/client/search-history";
 import { useAsync } from "@/client/useAsync";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Badge } from "@/components/ui/Badge";
@@ -13,7 +20,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { Input } from "@/components/ui/Input";
 import { Pagination } from "@/components/ui/Pagination";
 import { SkeletonRows } from "@/components/ui/Skeleton";
-import { MapPin, Plus, Search as SearchIcon } from "@/components/ui/icons";
+import { Box, MapPin, Plus, Search as SearchIcon, X } from "@/components/ui/icons";
 import { formatDateTime, formatRelativeTime, toDateTimeAttr, truncate } from "@/lib/format";
 import { cx } from "@/lib/cx";
 
@@ -44,6 +51,16 @@ const MATCH_TONES: Record<string, "success" | "info" | "warning" | "muted"> = {
   fuzzy: "warning",
   fulltext: "muted",
 };
+
+/**
+ * Riwayat/saran chips (FR-032): ≥ 44 px tall, ≥ 12 px apart (the list carries
+ * `gap-3`), text truncated instead of forcing horizontal scroll at 360 px.
+ */
+const CHIP_CLASS =
+  "inline-flex min-h-11 max-w-[16rem] items-center gap-2 rounded-full border border-border bg-card px-4 text-base font-medium text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
+const CHIP_REMOVE_CLASS =
+  "inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-card text-muted-foreground hover:bg-danger-surface hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 function MatchBadge({ matchType }: { matchType: string }) {
   const label =
@@ -87,6 +104,49 @@ function SearchView() {
   const [draft, setDraft] = useState(q);
   useEffect(() => setDraft(q), [q]);
 
+  // Riwayat pencarian (FR-032): browser-local only, newest first, cap 10.
+  const [history, setHistory] = useState<string[]>([]);
+  useEffect(() => {
+    setHistory(readHistory());
+  }, []);
+
+  // Remember every executed search (a `q` in the URL, ≥ 2 chars). Re-running an
+  // identical query moves it to the front instead of duplicating it.
+  useEffect(() => {
+    const executed = q.trim();
+    if (executed.length < MIN_QUERY) return;
+    setHistory(saveQuery(executed));
+  }, [q]);
+
+  // Saran (FR-032): existing owner-scoped APIs only — recent items (newest
+  // updated first) and locations. Failures hide the section, never the page.
+  const suggestionsState = useAsync(async () => {
+    const [recentItems, locations] = await Promise.all([
+      api.items.list({ status: "active", limit: 5, sort: "updatedAt", order: "desc" }),
+      api.locations.list(),
+    ]);
+    return {
+      items: recentItems.items.map((item) => item.name).slice(0, 5),
+      locations: locations.locations.filter((loc) => !loc.archivedAt).map((loc) => loc.name).slice(0, 5),
+    };
+  }, []);
+
+  const suggestionChips = useMemo(() => {
+    const seen = new Set<string>();
+    const chips: { value: string; icon: typeof Box }[] = [];
+    const push = (value: string, icon: typeof Box) => {
+      const trimmed = value.trim();
+      const key = trimmed.toLowerCase();
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      chips.push({ value: trimmed, icon });
+    };
+    for (const entry of history.slice(0, 5)) push(entry, SearchIcon);
+    for (const name of suggestionsState.data?.items ?? []) push(name, Box);
+    for (const name of suggestionsState.data?.locations ?? []) push(name, MapPin);
+    return chips;
+  }, [history, suggestionsState.data]);
+
   // < 2 chars → no request, prompt instead (FR-005 error conditions).
   const tooShort = q.trim().length > 0 && q.trim().length < MIN_QUERY;
   const truncated = q.length > MAX_QUERY;
@@ -108,6 +168,23 @@ function SearchView() {
     router.replace(qs ? `/search?${qs}` : "/search", { scroll: false });
   };
 
+  /** Tap a riwayat/saran chip: fill the field and run that query (AC-032-2). */
+  const runQuery = (value: string) => {
+    setDraft(value);
+    navigate({ q: value });
+  };
+
+  const removeChip = (value: string) => {
+    const next = removeFromHistory(history, value);
+    setHistory(next);
+    writeHistory(next);
+  };
+
+  const clearAll = () => {
+    setHistory([]);
+    clearHistory();
+  };
+
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     navigate({ q: draft.trim() });
@@ -121,6 +198,59 @@ function SearchView() {
   return (
     <>
       <PageHeader title="Cari" subtitle="Pencarian pasti di semua barang dan lokasi Anda." />
+
+      {/* Riwayat pencarian (FR-032): browser-local chips, hidden when empty. */}
+      {history.length > 0 && (
+        <section aria-labelledby="riwayat-heading" className="mb-5">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <h2 id="riwayat-heading" className="text-lg font-semibold text-foreground">
+              Riwayat pencarian
+            </h2>
+            <Button variant="ghost" className="min-h-11" onClick={clearAll}>
+              Hapus semua
+            </Button>
+          </div>
+          <ul className="flex flex-wrap gap-3">
+            {history.map((entry) => (
+              <li key={entry} className="flex items-center gap-3">
+                <button type="button" onClick={() => runQuery(entry)} className={CHIP_CLASS}>
+                  <span className="min-w-0 truncate">{entry}</span>
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Hapus “${entry}” dari riwayat`}
+                  onClick={() => removeChip(entry)}
+                  className={CHIP_REMOVE_CLASS}
+                >
+                  <X size={16} aria-hidden="true" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* Saran (FR-032): recent queries + the owner's recent items & locations. */}
+      {suggestionChips.length > 0 && (
+        <section aria-labelledby="saran-heading" className="mb-5">
+          <h2 id="saran-heading" className="mb-3 text-lg font-semibold text-foreground">
+            Saran
+          </h2>
+          <ul className="flex flex-wrap gap-3">
+            {suggestionChips.map((chip) => {
+              const Icon = chip.icon;
+              return (
+                <li key={chip.value}>
+                  <button type="button" onClick={() => runQuery(chip.value)} className={CHIP_CLASS}>
+                    <Icon size={16} className="shrink-0" aria-hidden="true" />
+                    <span className="min-w-0 truncate">{chip.value}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       <form role="search" onSubmit={submit} className="mb-5 flex items-center gap-3">
         <div className="relative min-w-0 flex-1">

@@ -28,17 +28,6 @@ function escapeLike(value: string): string {
   return value.replace(/[\\%_]/g, (m) => `\\${m}`);
 }
 
-function itemFilterWhere(ownerId: string, query: ItemListQuery): Prisma.ItemWhereInput {
-  const where: Prisma.ItemWhereInput = { ownerId, deletedAt: null };
-  if (query.status === "active") where.archivedAt = null;
-  else if (query.status === "archived") where.archivedAt = { not: null };
-  if (query.q) where.name = { contains: query.q, mode: "insensitive" };
-  if (query.category) where.category = query.category;
-  // Semantics: items with at least one recorded location event at that location.
-  if (query.locationId) where.events = { some: { locationId: query.locationId } };
-  return where;
-}
-
 /** Same filters as SQL for the raw `lastRecordedAt` sort path (parameterized only). */
 function itemFilterSql(ownerId: string, query: ItemListQuery): Prisma.Sql {
   const conds: Prisma.Sql[] = [Prisma.sql`i.owner_id = ${ownerId}`, Prisma.sql`i.deleted_at IS NULL`];
@@ -48,7 +37,7 @@ function itemFilterSql(ownerId: string, query: ItemListQuery): Prisma.Sql {
   if (query.category) conds.push(Prisma.sql`i.category = ${query.category}`);
   if (query.locationId) {
     conds.push(
-      Prisma.sql`EXISTS (SELECT 1 FROM item_location_events ev WHERE ev.item_id = i.id AND ev.location_id = ${query.locationId})`,
+      Prisma.sql`EXISTS (SELECT 1 FROM item_location_events ev WHERE ev.item_id = i.id AND ev.location_id = ${query.locationId}::uuid)`,
     );
   }
   return Prisma.join(conds, " AND ");
@@ -63,7 +52,6 @@ export async function listItems(
   ownerId: string,
   query: ItemListQuery,
 ): Promise<{ rows: Item[]; total: number }> {
-  const where = itemFilterWhere(ownerId, query);
   const order: Prisma.SortOrder = query.order === "asc" ? "asc" : "desc";
 
   if (query.sort === "lastRecordedAt") {
@@ -84,13 +72,33 @@ export async function listItems(
     return { rows, total: countRows[0]?.count ?? 0 };
   }
 
-  const orderBy: Prisma.ItemOrderByWithRelationInput =
-    query.sort === "name" ? { name: order, id: order } : { updatedAt: order, id: order };
-  const [rows, total] = await Promise.all([
-    prisma.item.findMany({ where, orderBy, skip: query.offset, take: query.limit }),
-    prisma.item.count({ where }),
+  const filter = itemFilterSql(ownerId, query);
+  const dir = order === "asc" ? Prisma.sql`ASC` : Prisma.sql`DESC`;
+  const sortColumn = query.sort === "name" ? Prisma.sql`i.name` : Prisma.sql`i."updatedAt"`;
+  const [rows, countRows] = await Promise.all([
+    prisma.$queryRaw<Item[]>`
+      SELECT ${ITEM_COLUMNS}
+      FROM items i
+      WHERE ${filter}
+      ORDER BY ${sortColumn} ${dir}, i.id ${dir}
+      LIMIT ${query.limit} OFFSET ${query.offset}
+    `,
+    prisma.$queryRaw<{ count: number }[]>`SELECT COUNT(*)::int AS count FROM items i WHERE ${filter}`,
   ]);
+  const total = countRows[0]?.count ?? 0;
   return { rows, total };
+}
+
+/**
+ * Every non-deleted item row for the owner, uncapped (FR-022 export): the
+ * paginated `listItems` above is for views, the export must not lose rows.
+ * Archived rows are included — they are still the owner's data (BR-07).
+ */
+export async function allItems(ownerId: string, db: Db = prisma): Promise<Item[]> {
+  return db.item.findMany({
+    where: { ownerId, deletedAt: null },
+    orderBy: { createdAt: "asc", id: "asc" },
+  });
 }
 
 /** Active (non-deleted) item — normal read path. */

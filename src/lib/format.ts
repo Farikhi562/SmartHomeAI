@@ -14,13 +14,13 @@ const RELATIVE_UNITS: ReadonlyArray<[Intl.RelativeTimeFormatUnit, number]> = [
   ["second", 1],
 ];
 
-const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-const dateFmt = new Intl.DateTimeFormat("en", {
+const rtf = new Intl.RelativeTimeFormat("id", { numeric: "auto" });
+const dateFmt = new Intl.DateTimeFormat("id", {
   day: "numeric",
   month: "short",
   year: "numeric",
 });
-const dateTimeFmt = new Intl.DateTimeFormat("en", {
+const dateTimeFmt = new Intl.DateTimeFormat("id", {
   day: "numeric",
   month: "short",
   year: "numeric",
@@ -34,7 +34,7 @@ export function toDate(value: string | Date | null | undefined): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-/** "just now" · "5 minutes ago" · "2 days ago" · "in 3 hours". */
+/** "baru saja" · "5 menit yang lalu" · "2 hari yang lalu" · "3 jam lagi" (locale id). */
 export function formatRelativeTime(
   value: string | Date | null | undefined,
   now: Date = new Date(),
@@ -43,22 +43,22 @@ export function formatRelativeTime(
   if (!date) return "—";
   const deltaSec = Math.round((date.getTime() - now.getTime()) / 1000);
   const abs = Math.abs(deltaSec);
-  if (abs < 45) return "just now";
+  if (abs < 45) return "baru saja";
   for (const [unit, seconds] of RELATIVE_UNITS) {
     if (abs >= seconds) {
       return rtf.format(Math.round(deltaSec / seconds), unit);
     }
   }
-  return "just now";
+  return "baru saja";
 }
 
-/** Absolute date, e.g. "14 Oct 2026". */
+/** Absolute date, e.g. "14 Okt 2026". */
 export function formatDate(value: string | Date | null | undefined): string {
   const date = toDate(value);
   return date ? dateFmt.format(date) : "—";
 }
 
-/** Absolute date + time, e.g. "14 Oct 2026, 20:30". */
+/** Absolute date + time, e.g. "14 Okt 2026, 20.30". */
 export function formatDateTime(value: string | Date | null | undefined): string {
   const date = toDate(value);
   return date ? dateTimeFmt.format(date) : "—";

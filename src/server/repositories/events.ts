@@ -74,6 +74,26 @@ export async function listEventsByItem(
   };
 }
 
+/**
+ * Every owner event, uncapped and oldest-first (FR-022 export): the paginated
+ * feeds above are for views, the export must not lose rows. Read-only — the
+ * append-only invariant (BR-06) is untouched: no update/delete exists here.
+ */
+export async function allEvents(
+  ownerId: string,
+): Promise<(ItemLocationEvent & { itemName: string; locationName: string })[]> {
+  const rows = await prisma.itemLocationEvent.findMany({
+    where: { ownerId },
+    orderBy: [{ occurredAt: "asc" }, { recordedAt: "asc" }, { id: "asc" }],
+    include: { item: { select: { name: true } }, location: { select: { name: true } } },
+  });
+  return rows.map(({ item, location, ...rest }) => ({
+    ...rest,
+    itemName: item.name,
+    locationName: location.name,
+  }));
+}
+
 export type CreateEventInput = {
   itemId: string;
   locationId: string;
@@ -149,7 +169,7 @@ export async function lastEventForItems(ownerId: string, itemIds: string[]): Pro
     JOIN items it ON it.id = e.item_id
     JOIN locations lo ON lo.id = e.location_id
     WHERE e.owner_id = ${ownerId}
-      AND e.item_id IN (${Prisma.join(itemIds)})
+      AND e.item_id IN (${Prisma.join(itemIds.map((id) => Prisma.sql`${id}::uuid`))})
     ORDER BY e.item_id ASC, e.occurred_at DESC, e.recorded_at DESC, e.id DESC
   `;
   for (const row of rows) map.set(row.itemId, EVENT_ROW_MAPPER(row));
@@ -186,7 +206,7 @@ export async function itemsLastLocatedAt(
     JOIN items it ON it.id = e.item_id
     JOIN locations lo ON lo.id = e.location_id
     WHERE e.owner_id = ${ownerId}
-      AND e.location_id = ${locationId}
+      AND e.location_id = ${locationId}::uuid
       AND it.deleted_at IS NULL
       AND it.archived_at IS NULL
     ORDER BY e.item_id ASC, e.occurred_at DESC, e.recorded_at DESC, e.id DESC

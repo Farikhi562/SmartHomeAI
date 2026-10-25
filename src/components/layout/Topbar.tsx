@@ -15,6 +15,7 @@ function titleFor(pathname: string): string {
   if (/^\/inventory\/[^/]+\/edit/.test(pathname)) return "Ubah barang";
   if (/^\/inventory\/[^/]+/.test(pathname)) return "Barang";
   if (pathname.startsWith("/inventory")) return "Barang";
+  if (pathname.startsWith("/labels")) return "Cetak label";
   if (pathname.startsWith("/dashboard")) return "Beranda";
   if (pathname.startsWith("/locations")) return "Lokasi";
   if (pathname.startsWith("/search")) return "Cari";
@@ -90,7 +91,7 @@ export function Topbar({
   const displayName = user ? (user.displayName || user.email) : null;
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-card">
+    <header className="sticky top-0 z-30 border-b border-border bg-card print:hidden">
       <div className="flex h-16 items-center gap-3 px-3 sm:px-4 lg:px-6">
         <button
           type="button"
@@ -177,7 +178,7 @@ export function Topbar({
                 <p id="theme-label" className="mb-1.5 text-dense font-medium text-foreground">
                   Tema
                 </p>
-                <div role="radiogroup" aria-labelledby="theme-label" className="flex gap-2">
+                <div role="radiogroup" aria-labelledby="theme-label" className="flex gap-3">
                   {THEME_OPTIONS.map((option) => {
                     const Icon = option.icon;
                     const active = theme === option.value;
@@ -204,7 +205,7 @@ export function Topbar({
                 </div>
               </div>
 
-              <div className="flex flex-col gap-1 pt-2">
+              <div className="flex flex-col gap-3 pt-2">
                 <Link
                   href="/settings"
                   role="menuitem"

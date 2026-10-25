@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     default: "SmartHomeAI",
     template: "%s — SmartHomeAI",
   },
-  description: "AI-powered personal belongings memory",
+  description: "Ingatan bertenaga AI untuk barang-barang pribadi Anda",
   applicationName: "SmartHomeAI",
 };
 
@@ -25,7 +25,7 @@ const THEME_INIT_SCRIPT = `(function(){try{var t=window.localStorage.getItem("sh
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="id" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>

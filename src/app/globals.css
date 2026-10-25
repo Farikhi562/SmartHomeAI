@@ -257,10 +257,28 @@
   }
 }
 
-/* Print: fixed navigation chrome never appears on paper. */
+/* Print: fixed navigation chrome never appears on paper, the main column fills
+   the sheet (no screen gutters / bottom-nav spacer), and ink stays readable
+   even when the on-screen theme is dark (FR-031 — labels print cleanly). */
 @media print {
   .app-shell-chrome {
     display: none !important;
+  }
+
+  #main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  :root,
+  .dark {
+    --background: #ffffff;
+    --foreground: #101828;
+    --card: #ffffff;
+    --card-foreground: #101828;
+    --muted-foreground: #475467;
+    --border: #d0d5dd;
+    --border-strong: #667085;
   }
 }
 

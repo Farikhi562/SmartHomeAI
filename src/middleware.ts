@@ -17,6 +17,7 @@ const PUBLIC_API_PREFIXES = ["/api/health", "/api/auth"];
 const PROTECTED_PAGES = [
   "/dashboard",
   "/inventory",
+  "/labels",
   "/locations",
   "/assistant",
   "/search",
@@ -65,6 +66,7 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/inventory/:path*",
+    "/labels/:path*",
     "/locations/:path*",
     "/assistant/:path*",
     "/search/:path*",
